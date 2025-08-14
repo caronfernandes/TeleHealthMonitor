@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { WorkflowSidebar } from "@/components/workflow/WorkflowSidebar";
-import { SymptomSelection } from "@/components/workflow/SymptomSelection";
+import { SymptomSelection } from "@/components/workflow/SymptomSelectionSimple";
+import { SymptomDetails } from "@/components/workflow/SymptomDetails";
 import { PhysicalExamination } from "@/components/workflow/PhysicalExamination";
 import { InvestigationManagement } from "@/components/workflow/InvestigationManagement";
 import { PrescriptionManagement } from "@/components/workflow/PrescriptionManagement";
@@ -39,7 +40,11 @@ export default function MedicalWorkflow() {
 
   const handleSymptomSelect = (symptom: string) => {
     setSelectedSymptom(symptom);
-    setCurrentStep(2);
+    setCurrentStep(2); // Move to symptom details step
+  };
+
+  const handleSymptomDetailsComplete = () => {
+    setCurrentStep(3); // Move to physical examination
   };
 
   const handleExaminationSelect = (examId: string) => {
@@ -154,30 +159,16 @@ export default function MedicalWorkflow() {
       case 1:
         return (
           <SymptomSelection
-            selectedSymptom={selectedSymptom}
-            onSymptomSelect={handleSymptomSelect}
-            onNextStep={() => setCurrentStep(2)}
+            onNextStep={handleSymptomSelect}
           />
         );
       case 2:
         return (
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-xl shadow-sm border border-medical-gray-200 p-8">
-              <h2 className="text-xl font-semibold text-medical-gray-900 mb-4">
-                Symptom Details - {selectedSymptom}
-              </h2>
-              <p className="text-medical-gray-600 mb-6">
-                Please add detailed information about the selected symptom.
-              </p>
-              <button 
-                onClick={() => setCurrentStep(3)}
-                className="bg-medical-blue hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
-                data-testid="button-next-examination"
-              >
-                Continue to Examination
-              </button>
-            </div>
-          </div>
+          <SymptomDetails
+            selectedSymptom={selectedSymptom}
+            onPreviousStep={() => setCurrentStep(1)}
+            onNextStep={handleSymptomDetailsComplete}
+          />
         );
       case 3:
         return (
@@ -239,30 +230,6 @@ export default function MedicalWorkflow() {
         );
       case 6:
         return (
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-xl shadow-sm border border-medical-gray-200 p-8">
-              <h2 className="text-xl font-semibold text-medical-gray-900 mb-4">
-                Diagnosis
-              </h2>
-              <textarea
-                value={diagnosis}
-                onChange={(e) => setDiagnosis(e.target.value)}
-                className="w-full p-4 border border-medical-gray-300 rounded-lg focus:ring-2 focus:ring-medical-blue focus:border-medical-blue h-32 resize-none"
-                placeholder="Enter your clinical diagnosis..."
-                data-testid="textarea-diagnosis"
-              />
-              <button 
-                onClick={() => setCurrentStep(7)}
-                className="mt-6 bg-medical-blue hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
-                data-testid="button-next-prescription"
-              >
-                Continue to Prescription
-              </button>
-            </div>
-          </div>
-        );
-      case 7:
-        return (
           <PrescriptionManagement
             selectedTemplate={selectedTemplate}
             prescriptionItems={prescriptionItems}
@@ -298,7 +265,6 @@ export default function MedicalWorkflow() {
                                    currentStep === 3 ? 'Physical Examination' :
                                    currentStep === 4 ? 'Red Flags Assessment' :
                                    currentStep === 5 ? 'Investigations' :
-                                   currentStep === 6 ? 'Diagnosis' :
                                    'Prescription'}
               </p>
             </div>

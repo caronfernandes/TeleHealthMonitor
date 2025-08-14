@@ -1,4 +1,5 @@
 import { Thermometer, ArrowRight } from "lucide-react";
+import { symptoms } from "@/lib/medical-data";
 
 interface SymptomSelectionProps {
   selectedSymptom: string;
@@ -7,20 +8,7 @@ interface SymptomSelectionProps {
 }
 
 export function SymptomSelection({ selectedSymptom, onSymptomSelect, onNextStep }: SymptomSelectionProps) {
-  const symptoms = [
-    { id: 'fever', label: 'Fever', icon: 'fas fa-thermometer-half', color: 'bg-medical-blue', description: 'Pyrexia', note: 'Most common presentation' },
-    { id: 'oa', label: 'OA', icon: 'fas fa-bone', color: 'bg-medical-green', description: 'Osteoarthritis', note: 'Joint degenerative disease' },
-    { id: 'multifocal_pain', label: 'Multifocal Pain', icon: 'fas fa-hand-dots', color: 'bg-purple-500', description: 'Multiple joint pain', note: 'Widespread pain syndrome' },
-    { id: 'degen_spine', label: 'Degen Spine', icon: 'fas fa-spine', color: 'bg-medical-orange', description: 'Degenerative spine', note: 'Spinal degeneration' },
-    { id: 'ctd', label: 'CTD', icon: 'fas fa-dna', color: 'bg-medical-red', description: 'Connective Tissue Disease', note: 'Autoimmune conditions' },
-    { id: 'spa', label: 'SpA', icon: 'fas fa-joints', color: 'bg-indigo-500', description: 'Spondyloarthritis', note: 'Inflammatory arthritis' },
-  ];
-
-  const feverDetails = {
-    duration: ['<3 days', '3–7 days', '> 7 days', 'Intermittent', 'Persistent', 'Recurrent'],
-    pattern: ['Continuous', 'Intermittent', 'Remittent', 'Quotidian', 'Step-ladder', 'Relapsing'],
-    associated: ['Rash', 'Cough', 'Headache', 'Joint pain', 'Burning micturition', 'Vomiting', 'Abdominal pain', 'Sore throat', 'Weight loss', 'Night sweats']
-  };
+  const selectedSymptomData = symptoms.find(s => s.id === selectedSymptom);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -61,80 +49,227 @@ export function SymptomSelection({ selectedSymptom, onSymptomSelect, onNextStep 
           ))}
         </div>
 
-        {/* Fever Details (shown when fever is selected) */}
-        {selectedSymptom === 'fever' && (
+        {/* Symptom Details (shown when a symptom is selected) */}
+        {selectedSymptom && selectedSymptomData && (
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
             <h3 className="font-semibold text-medical-gray-900 mb-4 flex items-center">
-              <Thermometer className="h-5 w-5 text-medical-blue mr-2" />
-              Fever - Detailed Assessment
+              <i className={`${selectedSymptomData.icon} text-medical-blue mr-2`}></i>
+              {selectedSymptomData.label} - Detailed Assessment
             </h3>
             
-            {/* Duration */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-medical-gray-700 mb-3">
-                Duration of Fever
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {feverDetails.duration.map((duration, index) => (
-                  <button
-                    key={duration}
-                    className={`p-3 text-left border-2 rounded-lg text-sm transition-colors ${
-                      index === 0 
-                        ? 'border-medical-blue bg-medical-blue text-white font-medium'
-                        : 'border-medical-gray-200 hover:border-medical-blue'
-                    }`}
-                    data-testid={`button-duration-${duration.replace(/[<>&\s]/g, '-')}`}
-                  >
-                    {duration}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Pattern */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-medical-gray-700 mb-3">
-                Fever Pattern
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {feverDetails.pattern.map((pattern, index) => (
-                  <button
-                    key={pattern}
-                    className={`p-3 text-left border-2 rounded-lg text-sm transition-colors ${
-                      pattern === 'Step-ladder'
-                        ? 'border-medical-blue bg-medical-blue text-white font-medium'
-                        : 'border-medical-gray-200 hover:border-medical-blue'
-                    }`}
-                    data-testid={`button-pattern-${pattern.toLowerCase()}`}
-                  >
-                    {pattern}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Associated Symptoms */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-medical-gray-700 mb-3">
-                Associated Symptoms
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                {feverDetails.associated.map((symptom) => (
-                  <label 
-                    key={symptom}
-                    className="flex items-center p-3 border border-medical-gray-200 rounded-lg hover:bg-medical-gray-50 cursor-pointer"
-                  >
-                    <input 
-                      type="checkbox" 
-                      className="mr-2 text-medical-blue rounded"
-                      defaultChecked={['Rash', 'Headache', 'Night sweats'].includes(symptom)}
-                      data-testid={`checkbox-symptom-${symptom.toLowerCase().replace(/\s+/g, '-')}`}
-                    />
-                    <span className="text-sm">{symptom}</span>
+            {/* Render different detail sections based on symptom type */}
+            {selectedSymptom === 'fever' && (
+              <>
+                {/* Duration */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-medical-gray-700 mb-3">
+                    Duration of Fever
                   </label>
-                ))}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {selectedSymptomData?.details?.duration?.map((duration, index) => (
+                      <button
+                        key={duration}
+                        className={`p-3 text-left border-2 rounded-lg text-sm transition-colors ${
+                          index === 0 
+                            ? 'border-medical-blue bg-medical-blue text-white font-medium'
+                            : 'border-medical-gray-200 hover:border-medical-blue'
+                        }`}
+                        data-testid={`button-duration-${duration.replace(/[<>&\s]/g, '-')}`}
+                      >
+                        {duration}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Pattern */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-medical-gray-700 mb-3">
+                    Fever Pattern
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {selectedSymptomData?.details?.pattern?.map((pattern, index) => (
+                      <button
+                        key={pattern}
+                        className={`p-3 text-left border-2 rounded-lg text-sm transition-colors ${
+                          pattern === 'Step-ladder'
+                            ? 'border-medical-blue bg-medical-blue text-white font-medium'
+                            : 'border-medical-gray-200 hover:border-medical-blue'
+                        }`}
+                        data-testid={`button-pattern-${pattern.toLowerCase()}`}
+                      >
+                        {pattern}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Response to Antipyretics */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-medical-gray-700 mb-3">
+                    Response to Antipyretics
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    {selectedSymptomData?.details?.response?.map((response, index) => (
+                      <button
+                        key={response}
+                        className={`p-3 text-left border-2 rounded-lg text-sm transition-colors ${
+                          index === 0 
+                            ? 'border-medical-blue bg-medical-blue text-white font-medium'
+                            : 'border-medical-gray-200 hover:border-medical-blue'
+                        }`}
+                        data-testid={`button-response-${response.toLowerCase().replace(/\s+/g, '-')}`}
+                      >
+                        {response}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {selectedSymptom === 'cough' && (
+              <>
+                {/* Onset */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-medical-gray-700 mb-3">
+                    Onset of Cough
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    {selectedSymptomData?.details?.onset?.map((onset, index) => (
+                      <button
+                        key={onset}
+                        className={`p-3 text-left border-2 rounded-lg text-sm transition-colors ${
+                          index === 0 
+                            ? 'border-medical-blue bg-medical-blue text-white font-medium'
+                            : 'border-medical-gray-200 hover:border-medical-blue'
+                        }`}
+                        data-testid={`button-onset-${onset.toLowerCase().replace(/[<>()&\s]/g, '-')}`}
+                      >
+                        {onset}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Type */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-medical-gray-700 mb-3">
+                    Type of Cough
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {selectedSymptomData?.details?.type?.map((type, index) => (
+                      <button
+                        key={type}
+                        className={`p-3 text-left border-2 rounded-lg text-sm transition-colors ${
+                          index === 0 
+                            ? 'border-medical-blue bg-medical-blue text-white font-medium'
+                            : 'border-medical-gray-200 hover:border-medical-blue'
+                        }`}
+                        data-testid={`button-type-${type.toLowerCase()}`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Timing */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-medical-gray-700 mb-3">
+                    Timing
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    {selectedSymptomData?.details?.timing?.map((timing, index) => (
+                      <button
+                        key={timing}
+                        className={`p-3 text-left border-2 rounded-lg text-sm transition-colors ${
+                          index === 0 
+                            ? 'border-medical-blue bg-medical-blue text-white font-medium'
+                            : 'border-medical-gray-200 hover:border-medical-blue'
+                        }`}
+                        data-testid={`button-timing-${timing.toLowerCase().replace(/\s+/g, '-')}`}
+                      >
+                        {timing}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {selectedSymptom === 'weight_change' && (
+              <>
+                {/* Type of Weight Change */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-medical-gray-700 mb-3">
+                    Type of Weight Change
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {selectedSymptomData?.details?.type?.map((type, index) => (
+                      <button
+                        key={type}
+                        className={`p-3 text-left border-2 rounded-lg text-sm transition-colors ${
+                          index === 0 
+                            ? 'border-medical-blue bg-medical-blue text-white font-medium'
+                            : 'border-medical-gray-200 hover:border-medical-blue'
+                        }`}
+                        data-testid={`button-weight-type-${type.toLowerCase().replace(/\s+/g, '-')}`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Onset */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-medical-gray-700 mb-3">
+                    Onset
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {selectedSymptomData?.details?.onset?.map((onset, index) => (
+                      <button
+                        key={onset}
+                        className={`p-3 text-left border-2 rounded-lg text-sm transition-colors ${
+                          index === 0 
+                            ? 'border-medical-blue bg-medical-blue text-white font-medium'
+                            : 'border-medical-gray-200 hover:border-medical-blue'
+                        }`}
+                        data-testid={`button-weight-onset-${onset.toLowerCase()}`}
+                      >
+                        {onset}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Associated Symptoms - Common for all symptom types */}
+            {selectedSymptomData?.details?.associated && (
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-medical-gray-700 mb-3">
+                  Associated Symptoms
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {selectedSymptomData.details.associated.map((symptom) => (
+                    <label 
+                      key={symptom}
+                      className="flex items-center p-3 border border-medical-gray-200 rounded-lg hover:bg-medical-gray-50 cursor-pointer"
+                    >
+                      <input 
+                        type="checkbox" 
+                        className="mr-2 text-medical-blue rounded"
+                        defaultChecked={['Rash', 'Headache', 'Night sweats'].includes(symptom)}
+                        data-testid={`checkbox-symptom-${symptom.toLowerCase().replace(/\s+/g, '-')}`}
+                      />
+                      <span className="text-sm">{symptom}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 

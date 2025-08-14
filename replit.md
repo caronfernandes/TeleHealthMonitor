@@ -51,7 +51,14 @@ Preferred communication style: Simple, everyday language.
 
 ### Medical Domain Features
 - **Symptom Classification**: Predefined symptom categories common in Indian medical practice
-- **Red Flag Detection**: Automated clinical alerts based on examination findings
+- **Symptom Details Workflow**: Dedicated step for comprehensive symptom assessment with associated symptoms capture
+- **Inline Red Flag Detection**: Automated clinical alerts integrated directly into examination findings (no separate tab)
 - **Investigation Recommendations**: Context-aware test suggestions based on symptoms
 - **Prescription Templates**: Reusable medication combinations for common conditions
 - **Multilingual Support**: Hindi and English labels for better accessibility
+
+## Recent Changes (August 2025)
+- **Workflow Restructuring**: Separated symptom selection from detailed assessment into distinct steps
+- **Enhanced Symptom Details**: Added comprehensive assessment forms for primary and associated symptoms
+- **Streamlined Red Flags**: Integrated red flag detection directly into physical examination interface
+- **5-Step Workflow**: Simplified from 6 steps to 5 by removing standalone red flags assessment

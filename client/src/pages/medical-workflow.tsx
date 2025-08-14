@@ -183,41 +183,6 @@ export default function MedicalWorkflow() {
         );
       case 4:
         return (
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-xl shadow-sm border border-medical-gray-200 p-8">
-              <h2 className="text-xl font-semibold text-medical-gray-900 mb-4">
-                Red Flags Assessment
-              </h2>
-              {redFlags.length > 0 ? (
-                <div className="space-y-3">
-                  {redFlags.map((flag, index) => (
-                    <div key={index} className={`p-4 rounded-lg ${flag.critical ? 'bg-red-100 border border-red-300' : 'bg-yellow-100 border border-yellow-300'}`}>
-                      <span className={`font-medium ${flag.critical ? 'text-red-800' : 'text-yellow-800'}`}>
-                        {flag.text}
-                      </span>
-                      {flag.critical && (
-                        <span className="ml-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs">
-                          CRITICAL
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-medical-gray-600">No red flags detected.</p>
-              )}
-              <button 
-                onClick={() => setCurrentStep(5)}
-                className="mt-6 bg-medical-blue hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
-                data-testid="button-next-investigations"
-              >
-                Continue to Investigations
-              </button>
-            </div>
-          </div>
-        );
-      case 5:
-        return (
           <InvestigationManagement
             investigations={investigations}
             investigationValues={investigationValues}
@@ -225,10 +190,10 @@ export default function MedicalWorkflow() {
             onInvestigationToggle={handleInvestigationToggle}
             onInvestigationStatusChange={handleInvestigationStatusChange}
             onInvestigationValueChange={handleInvestigationValueChange}
-            onNextStep={() => setCurrentStep(6)}
+            onNextStep={() => setCurrentStep(5)}
           />
         );
-      case 6:
+      case 5:
         return (
           <PrescriptionManagement
             selectedTemplate={selectedTemplate}
@@ -263,8 +228,7 @@ export default function MedicalWorkflow() {
                 Step {currentStep}: {currentStep === 1 ? 'Chief Complaint Selection' : 
                                    currentStep === 2 ? 'Symptom Details' :
                                    currentStep === 3 ? 'Physical Examination' :
-                                   currentStep === 4 ? 'Red Flags Assessment' :
-                                   currentStep === 5 ? 'Investigations' :
+                                   currentStep === 4 ? 'Investigations' :
                                    'Prescription'}
               </p>
             </div>

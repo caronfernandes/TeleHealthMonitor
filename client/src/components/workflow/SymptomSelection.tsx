@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Thermometer, ArrowRight } from "lucide-react";
 import { symptoms } from "@/lib/medical-data";
 
@@ -9,10 +10,20 @@ interface SymptomSelectionProps {
 
 export function SymptomSelection({ selectedSymptom, onSymptomSelect, onNextStep }: SymptomSelectionProps) {
   const selectedSymptomData = symptoms.find(s => s.id === selectedSymptom);
-  
-  console.log('Selected symptom:', selectedSymptom);
-  console.log('Selected symptom data:', selectedSymptomData);
-  console.log('Symptoms available:', symptoms.map(s => s.id));
+  const [selectedDuration, setSelectedDuration] = useState('');
+  const [selectedPattern, setSelectedPattern] = useState('');
+  const [selectedResponse, setSelectedResponse] = useState('');
+  const [selectedOnset, setSelectedOnset] = useState('');
+  const [selectedType, setSelectedType] = useState('');
+  const [associatedSymptoms, setAssociatedSymptoms] = useState<string[]>([]);
+
+  const toggleAssociatedSymptom = (symptom: string) => {
+    setAssociatedSymptoms(prev => 
+      prev.includes(symptom) 
+        ? prev.filter(s => s !== symptom)
+        : [...prev, symptom]
+    );
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -21,9 +32,16 @@ export function SymptomSelection({ selectedSymptom, onSymptomSelect, onNextStep 
           <h2 className="text-xl font-semibold text-medical-gray-900 mb-2">
             Select Primary Symptom
           </h2>
-          <p className="text-medical-gray-600">
-            Choose the main complaint that brought the patient to you today.
+          <p className="text-medical-gray-600 mb-4">
+            Choose the main complaint that brought the patient to you today. After selecting, a detailed assessment form will appear below.
           </p>
+          {selectedSymptom && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <p className="text-green-700 text-sm font-medium">
+                ✓ {selectedSymptomData?.label} selected. Scroll down to complete the detailed clinical assessment.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Symptom Grid */}
@@ -55,11 +73,14 @@ export function SymptomSelection({ selectedSymptom, onSymptomSelect, onNextStep 
 
         {/* Symptom Details (shown when a symptom is selected) */}
         {selectedSymptom && selectedSymptomData && (
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
-            <h3 className="font-semibold text-medical-gray-900 mb-4 flex items-center">
-              <i className={`${selectedSymptomData.icon} text-medical-blue mr-2`}></i>
-              {selectedSymptomData.label} - Detailed Assessment
-            </h3>
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-xl p-8 mb-8 shadow-lg">
+            <div className="bg-white rounded-lg p-4 mb-6 border-l-4 border-medical-blue">
+              <h3 className="text-xl font-bold text-medical-gray-900 mb-2 flex items-center">
+                <i className={`${selectedSymptomData.icon} text-medical-blue mr-3 text-2xl`}></i>
+                {selectedSymptomData.label} - Detailed Clinical Assessment
+              </h3>
+              <p className="text-medical-gray-600">Complete the detailed symptom evaluation below based on IC4 medical guidelines.</p>
+            </div>
             
             {/* Render different detail sections based on symptom type */}
             {selectedSymptom === 'fever' && (
@@ -70,13 +91,14 @@ export function SymptomSelection({ selectedSymptom, onSymptomSelect, onNextStep 
                     Duration of Fever
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {selectedSymptomData?.details?.duration?.map((duration, index) => (
+                    {selectedSymptomData?.details?.duration?.map((duration) => (
                       <button
                         key={duration}
+                        onClick={() => setSelectedDuration(duration)}
                         className={`p-3 text-left border-2 rounded-lg text-sm transition-colors ${
-                          index === 0 
+                          selectedDuration === duration
                             ? 'border-medical-blue bg-medical-blue text-white font-medium'
-                            : 'border-medical-gray-200 hover:border-medical-blue'
+                            : 'border-medical-gray-200 hover:border-medical-blue hover:bg-blue-50'
                         }`}
                         data-testid={`button-duration-${duration.replace(/[<>&\s]/g, '-')}`}
                       >
@@ -92,13 +114,14 @@ export function SymptomSelection({ selectedSymptom, onSymptomSelect, onNextStep 
                     Fever Pattern
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {selectedSymptomData?.details?.pattern?.map((pattern, index) => (
+                    {selectedSymptomData?.details?.pattern?.map((pattern) => (
                       <button
                         key={pattern}
+                        onClick={() => setSelectedPattern(pattern)}
                         className={`p-3 text-left border-2 rounded-lg text-sm transition-colors ${
-                          pattern === 'Step-ladder'
+                          selectedPattern === pattern
                             ? 'border-medical-blue bg-medical-blue text-white font-medium'
-                            : 'border-medical-gray-200 hover:border-medical-blue'
+                            : 'border-medical-gray-200 hover:border-medical-blue hover:bg-blue-50'
                         }`}
                         data-testid={`button-pattern-${pattern.toLowerCase()}`}
                       >
@@ -114,13 +137,14 @@ export function SymptomSelection({ selectedSymptom, onSymptomSelect, onNextStep 
                     Response to Antipyretics
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    {selectedSymptomData?.details?.response?.map((response, index) => (
+                    {selectedSymptomData?.details?.response?.map((response) => (
                       <button
                         key={response}
+                        onClick={() => setSelectedResponse(response)}
                         className={`p-3 text-left border-2 rounded-lg text-sm transition-colors ${
-                          index === 0 
+                          selectedResponse === response
                             ? 'border-medical-blue bg-medical-blue text-white font-medium'
-                            : 'border-medical-gray-200 hover:border-medical-blue'
+                            : 'border-medical-gray-200 hover:border-medical-blue hover:bg-blue-50'
                         }`}
                         data-testid={`button-response-${response.toLowerCase().replace(/\s+/g, '-')}`}
                       >
@@ -140,13 +164,14 @@ export function SymptomSelection({ selectedSymptom, onSymptomSelect, onNextStep 
                     Onset of Cough
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    {selectedSymptomData?.details?.onset?.map((onset, index) => (
+                    {selectedSymptomData?.details?.onset?.map((onset) => (
                       <button
                         key={onset}
+                        onClick={() => setSelectedOnset(onset)}
                         className={`p-3 text-left border-2 rounded-lg text-sm transition-colors ${
-                          index === 0 
+                          selectedOnset === onset
                             ? 'border-medical-blue bg-medical-blue text-white font-medium'
-                            : 'border-medical-gray-200 hover:border-medical-blue'
+                            : 'border-medical-gray-200 hover:border-medical-blue hover:bg-blue-50'
                         }`}
                         data-testid={`button-onset-${onset.toLowerCase().replace(/[<>()&\s]/g, '-')}`}
                       >
@@ -162,13 +187,14 @@ export function SymptomSelection({ selectedSymptom, onSymptomSelect, onNextStep 
                     Type of Cough
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {selectedSymptomData?.details?.type?.map((type, index) => (
+                    {selectedSymptomData?.details?.type?.map((type) => (
                       <button
                         key={type}
+                        onClick={() => setSelectedType(type)}
                         className={`p-3 text-left border-2 rounded-lg text-sm transition-colors ${
-                          index === 0 
+                          selectedType === type
                             ? 'border-medical-blue bg-medical-blue text-white font-medium'
-                            : 'border-medical-gray-200 hover:border-medical-blue'
+                            : 'border-medical-gray-200 hover:border-medical-blue hover:bg-blue-50'
                         }`}
                         data-testid={`button-type-${type.toLowerCase()}`}
                       >
@@ -265,7 +291,8 @@ export function SymptomSelection({ selectedSymptom, onSymptomSelect, onNextStep 
                       <input 
                         type="checkbox" 
                         className="mr-2 text-medical-blue rounded"
-                        defaultChecked={['Rash', 'Headache', 'Night sweats'].includes(symptom)}
+                        checked={associatedSymptoms.includes(symptom)}
+                        onChange={() => toggleAssociatedSymptom(symptom)}
                         data-testid={`checkbox-symptom-${symptom.toLowerCase().replace(/\s+/g, '-')}`}
                       />
                       <span className="text-sm">{symptom}</span>

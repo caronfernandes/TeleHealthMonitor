@@ -14,12 +14,10 @@ interface WorkflowSidebarProps {
 export function WorkflowSidebar({ currentStep, patientInfo, onStepChange }: WorkflowSidebarProps) {
   const steps = [
     { id: 1, title: "Chief Complaint", subtitle: "Select primary symptom" },
-    { id: 2, title: "Symptom Details", subtitle: "Duration, pattern, severity" },
-    { id: 3, title: "Physical Examination", subtitle: "Vital signs & findings" },
-    { id: 4, title: "Red Flags", subtitle: "Critical alerts" },
-    { id: 5, title: "Investigations", subtitle: "Lab tests & imaging" },
-    { id: 6, title: "Diagnosis", subtitle: "Clinical assessment" },
-    { id: 7, title: "Prescription", subtitle: "Treatment plan" },
+    { id: 2, title: "Symptom Details", subtitle: "Assessment & associated symptoms" },
+    { id: 3, title: "Physical Examination", subtitle: "Vital signs & red flag alerts" },
+    { id: 4, title: "Investigations", subtitle: "Lab tests & imaging" },
+    { id: 5, title: "Prescription", subtitle: "Treatment plan & medications" },
   ];
 
   return (

@@ -1,0 +1,1117 @@
+import React, { useState } from 'react';
+import { ChevronRight, AlertTriangle, Thermometer, Stethoscope, FileText, Pill, User, Clock, X, Search } from 'lucide-react';
+
+const IndianDoctorWorkflow = () => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [selectedSymptom, setSelectedSymptom] = useState('');
+  const [symptomDetails, setSymptomDetails] = useState({});
+  const [examinationFindings, setExaminationFindings] = useState({});
+  const [selectedExaminations, setSelectedExaminations] = useState({});
+  const [examinationValues, setExaminationValues] = useState({});
+  const [redFlags, setRedFlags] = useState([]);
+  const [investigations, setInvestigations] = useState([]);
+  const [investigationValues, setInvestigationValues] = useState({});
+  const [investigationStatus, setInvestigationStatus] = useState({}); // 'done' or 'todo'
+  const [diagnosis, setDiagnosis] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [prescriptionItems, setPrescriptionItems] = useState([]);
+  const [editingItem, setEditingItem] = useState(null);
+  const [showMedicineModal, setShowMedicineModal] = useState(false);
+  const [medicineSearch, setMedicineSearch] = useState('');
+  const [patientInfo] = useState({
+    name: 'श्रीमती सुनीता शर्मा',
+    age: '35',
+    gender: 'Female',
+    uhid: 'UH24001234'
+  });
+
+  const symptoms = [
+    { id: 'fever', label: 'Fever', color: 'bg-blue-500' },
+    { id: 'oa', label: 'OA', color: 'bg-green-500' },
+    { id: 'multifocal_pain', label: 'Multifocal pain', color: 'bg-purple-500' },
+    { id: 'degen_spine', label: 'Degen spine', color: 'bg-orange-500' },
+    { id: 'ctd', label: 'CTD', color: 'bg-red-500' },
+    { id: 'spa', label: 'SpA', color: 'bg-indigo-500' },
+    { id: 'others', label: 'Others', color: 'bg-gray-500' }
+  ];
+
+  const feverDetails = {
+    duration: ['<3 days', '3–7 days', '> 7 days', 'Intermittent', 'Persistent', 'Recurrent'],
+    pattern: ['Continuous', 'Intermittent', 'Remittent', 'Quotidian', 'Step-ladder', 'Relapsing'],
+    response: ['Responds well', 'Temporary relief', 'No relief'],
+    associated: ['Rash', 'Cough', 'Headache', 'Joint pain', 'Burning micturition', 'Vomiting', 'Abdominal pain', 'Sore throat', 'Weight loss', 'Night sweats']
+  };
+
+  const examinationItems = [
+    { 
+      id: 'temperature', 
+      label: 'Temperature (exact)', 
+      type: 'input', 
+      unit: '°F',
+      placeholder: 'e.g., 101.2',
+      normalRange: '98.6-99.5°F'
+    },
+    { 
+      id: 'pulse', 
+      label: 'Pulse rate & pattern', 
+      type: 'input', 
+      unit: '/min',
+      placeholder: 'e.g., 92',
+      normalRange: '60-100/min'
+    },
+    { 
+      id: 'bp', 
+      label: 'Blood pressure', 
+      type: 'input', 
+      unit: 'mmHg',
+      placeholder: 'e.g., 120/80',
+      normalRange: '<120/80 mmHg'
+    },
+    { 
+      id: 'respiratory_rate', 
+      label: 'Respiratory rate', 
+      type: 'input', 
+      unit: '/min',
+      placeholder: 'e.g., 18',
+      normalRange: '12-20/min'
+    },
+    { 
+      id: 'pallor', 
+      label: 'Pallor', 
+      type: 'select', 
+      options: ['Present', 'Absent', 'Mild', 'Moderate', 'Severe']
+    },
+    { 
+      id: 'icterus', 
+      label: 'Icterus', 
+      type: 'select', 
+      options: ['Present', 'Absent', 'Mild', 'Moderate', 'Severe']
+    },
+    { 
+      id: 'lymphadenopathy', 
+      label: 'Lymphadenopathy', 
+      type: 'select', 
+      options: ['Present', 'Absent', 'Cervical', 'Axillary', 'Inguinal', 'Generalized']
+    },
+    { 
+      id: 'rash', 
+      label: 'Rash description & distribution', 
+      type: 'textarea', 
+      placeholder: 'Describe rash appearance, location, size...'
+    },
+    { 
+      id: 'oral_ulcers', 
+      label: 'Oral ulcers / pharyngitis', 
+      type: 'select', 
+      options: ['Present', 'Absent', 'Oral ulcers', 'Pharyngitis', 'Both']
+    },
+    { 
+      id: 'chest', 
+      label: 'Chest findings', 
+      type: 'textarea', 
+      placeholder: 'Describe breath sounds, adventitious sounds...'
+    },
+    { 
+      id: 'abdomen', 
+      label: 'Abdominal tenderness / organomegaly', 
+      type: 'textarea', 
+      placeholder: 'Describe tenderness, hepatomegaly, splenomegaly...'
+    },
+    { 
+      id: 'neurological', 
+      label: 'Neurological signs', 
+      type: 'textarea', 
+      placeholder: 'Describe any neurological abnormalities...'
+    },
+    { 
+      id: 'joints', 
+      label: 'Joint swelling / redness', 
+      type: 'textarea', 
+      placeholder: 'Describe joint involvement, location...'
+    }
+  ];
+
+  const getRedFlags = () => {
+    const flags = [];
+    
+    // Temperature-based red flags
+    const temp = parseFloat(examinationValues.temperature);
+    if (temp > 104) { // >40°C
+      flags.push({ text: `High-grade fever: ${temp}°F`, critical: true, source: 'temperature' });
+    }
+    if (temp < 95) { // <35°C
+      flags.push({ text: `Hypothermia: ${temp}°F`, critical: true, source: 'temperature' });
+    }
+    
+    // Blood pressure red flags
+    const bp = examinationValues.bp;
+    if (bp) {
+      const bpMatch = bp.match(/(\d+)\/(\d+)/);
+      if (bpMatch) {
+        const systolic = parseInt(bpMatch[1]);
+        const diastolic = parseInt(bpMatch[2]);
+        if (systolic < 90) {
+          flags.push({ text: `Hypotension: ${bp} mmHg`, critical: true, source: 'bp' });
+        }
+        if (systolic > 180 || diastolic > 110) {
+          flags.push({ text: `Hypertensive crisis: ${bp} mmHg`, critical: true, source: 'bp' });
+        }
+      }
+    }
+    
+    // Pulse rate red flags
+    const pulse = parseInt(examinationValues.pulse);
+    if (pulse > 120) {
+      flags.push({ text: `Tachycardia: ${pulse}/min`, critical: false, source: 'pulse' });
+    }
+    if (pulse < 50) {
+      flags.push({ text: `Bradycardia: ${pulse}/min`, critical: false, source: 'pulse' });
+    }
+    
+    // Respiratory rate red flags
+    const rr = parseInt(examinationValues.respiratory_rate);
+    if (rr > 24) {
+      flags.push({ text: `Tachypnea: ${rr}/min`, critical: false, source: 'respiratory_rate' });
+    }
+    if (rr < 8) {
+      flags.push({ text: `Bradypnea: ${rr}/min`, critical: true, source: 'respiratory_rate' });
+    }
+    
+    // Clinical findings red flags
+    if (examinationValues.pallor === 'Severe') {
+      flags.push({ text: 'Severe pallor detected', critical: true, source: 'pallor' });
+    }
+    
+    if (examinationValues.icterus === 'Severe') {
+      flags.push({ text: 'Severe icterus detected', critical: false, source: 'icterus' });
+    }
+    
+    if (examinationValues.lymphadenopathy === 'Generalized') {
+      flags.push({ text: 'Generalized lymphadenopathy', critical: false, source: 'lymphadenopathy' });
+    }
+    
+    // Text-based red flags (keywords in descriptions)
+    if (examinationValues.chest && examinationValues.chest.toLowerCase().includes('wheeze')) {
+      flags.push({ text: 'Wheezing detected', critical: false, source: 'chest' });
+    }
+    
+    if (examinationValues.abdomen && examinationValues.abdomen.toLowerCase().includes('rigid')) {
+      flags.push({ text: 'Abdominal rigidity', critical: true, source: 'abdomen' });
+    }
+    
+    if (examinationValues.neurological && 
+        (examinationValues.neurological.toLowerCase().includes('seizure') || 
+         examinationValues.neurological.toLowerCase().includes('unconscious'))) {
+      flags.push({ text: 'Neurological emergency signs', critical: true, source: 'neurological' });
+    }
+    
+    return flags;
+  };
+
+  const medicineDatabase = [
+    'Paracetamol', 'Ibuprofen', 'Aspirin', 'Amoxicillin', 'Azithromycin', 'Cefixime', 
+    'Ciprofloxacin', 'Metformin', 'Amlodipine', 'Atenolol', 'Omeprazole', 'Ranitidine',
+    'Cetirizine', 'Loratadine', 'Montelukast', 'Salbutamol', 'Prednisolone', 'Hydrocortisone',
+    'Insulin', 'Glimepiride', 'Atorvastatin', 'Rosuvastatin', 'Clopidogrel', 'Warfarin',
+    'Furosemide', 'Spironolactone', 'Digoxin', 'Propranolol', 'Losartan', 'Telmisartan'
+  ];
+
+  const strengthOptions = {
+    'Paracetamol': ['500mg', '650mg', '1g'],
+    'Ibuprofen': ['200mg', '400mg', '600mg'],
+    'Amoxicillin': ['250mg', '500mg', '875mg'],
+    'Azithromycin': ['250mg', '500mg'],
+    'Metformin': ['500mg', '850mg', '1000mg'],
+    'default': ['5mg', '10mg', '25mg', '50mg', '100mg', '250mg', '500mg', '1g']
+  };
+
+  const frequencyOptions = [
+    { label: 'Once Daily (OD)', value: 'OD', times: '1' },
+    { label: 'Twice Daily (BD)', value: 'BD', times: '2' },
+    { label: 'Three Times (TDS)', value: 'TDS', times: '3' },
+    { label: 'Four Times (QDS)', value: 'QDS', times: '4' },
+    { label: 'Every 4 hours', value: 'Q4H', times: '6' },
+    { label: 'Every 6 hours', value: 'Q6H', times: '4' },
+    { label: 'Every 8 hours', value: 'Q8H', times: '3' },
+    { label: 'As needed (SOS)', value: 'SOS', times: 'PRN' }
+  ];
+
+  const durationOptions = [
+    '3 Days', '5 Days', '7 Days', '10 Days', '14 Days', '21 Days', '1 Month', '2 Months', '3 Months', 'Ongoing'
+  ];
+
+  const investigationOptions = [
+    { id: 'cbc', name: 'CBC', hasValues: true, values: ['Hb', 'TLC', 'Platelets', 'DLC'] },
+    { id: 'lft', name: 'SGOT/SGPT', hasValues: true, values: ['SGOT', 'SGPT', 'Bilirubin'] },
+    { id: 'ana', name: 'ANA', hasValues: true, values: ['Pattern', 'Titre'] },
+    { id: 'creat', name: 'Creat', hasValues: true, values: ['Creatinine', 'Urea'] },
+    { id: 'rf', name: 'RF', hasValues: true, values: ['RF value'] },
+    { id: 'acpa', name: 'ACPA', hasValues: true, values: ['ACPA value'] },
+    { id: 'blood_culture', name: 'Blood culture', hasValues: true, values: ['Organism', 'Sensitivity'] },
+    { id: 'urine_routine', name: 'Urine routine', hasValues: true, values: ['Protein', 'Sugar', 'Pus cells', 'RBC'] },
+    { id: 'chest_xray', name: 'Chest X-ray', hasValues: true, values: ['Findings'] },
+    { id: 'ecg', name: 'ECG', hasValues: true, values: ['Rate', 'Rhythm', 'Findings'] },
+    { id: 'others', name: 'Others', hasValues: false, values: [] }
+  ];
+
+  const instructionOptions = [
+    'After food', 'Before food', 'With food', 'Empty stomach', 'At bedtime', 
+    'Morning', 'Evening', 'With plenty of water', 'Avoid alcohol', 'Complete the course'
+  ];
+
+  const prescriptionTemplates = [
+    { 
+      id: 1, 
+      name: 'Viral Fever', 
+      drugs: [
+        { medicine: 'Paracetamol', strength: '650mg', frequency: 'TDS', duration: '5 days', instructions: 'After meals' },
+        { medicine: 'ORS', strength: '1 sachet', frequency: 'As needed', duration: '5 days', instructions: 'With water' }
+      ]
+    },
+    { 
+      id: 2, 
+      name: 'Bacterial Infection', 
+      drugs: [
+        { medicine: 'Amoxicillin', strength: '500mg', frequency: 'TDS', duration: '7 days', instructions: 'After meals' },
+        { medicine: 'Paracetamol', strength: '650mg', frequency: 'SOS', duration: '5 days', instructions: 'For fever' }
+      ]
+    },
+    { 
+      id: 3, 
+      name: 'UTI Protocol', 
+      drugs: [
+        { medicine: 'Nitrofurantoin', strength: '100mg', frequency: 'BD', duration: '7 days', instructions: 'After meals' },
+        { medicine: 'Plenty of fluids', strength: '', frequency: 'Throughout day', duration: '10 days', instructions: 'At least 3L per day' }
+      ]
+    },
+    { 
+      id: 4, 
+      name: 'Gastroenteritis', 
+      drugs: [
+        { medicine: 'ORS', strength: '1 sachet', frequency: 'Frequent sips', duration: '5 days', instructions: 'Small frequent sips' },
+        { medicine: 'Zinc', strength: '20mg', frequency: 'OD', duration: '10 days', instructions: 'After meals' }
+      ]
+    }
+  ];
+
+  const handleTemplateSelect = (template) => {
+    setSelectedTemplate(template);
+    setPrescriptionItems(template.drugs.map((drug, index) => ({
+      id: Date.now() + index,
+      ...drug
+    })));
+  };
+
+  const handleEditItem = (item) => {
+    setEditingItem({...item});
+    setShowMedicineModal(true);
+  };
+
+  const handleUpdateItem = (updatedItem) => {
+    if (updatedItem.id) {
+      setPrescriptionItems(prev => 
+        prev.map(item => item.id === updatedItem.id ? updatedItem : item)
+      );
+    } else {
+      setPrescriptionItems(prev => [...prev, { ...updatedItem, id: Date.now() }]);
+    }
+    setEditingItem(null);
+    setShowMedicineModal(false);
+  };
+
+  const handleDeleteItem = (itemId) => {
+    setPrescriptionItems(prev => prev.filter(item => item.id !== itemId));
+  };
+
+  const handleAddNewMedicine = () => {
+    const newItem = {
+      id: null,
+      medicine: '',
+      strength: '',
+      frequency: '',
+      duration: '',
+      instructions: ''
+    };
+    setEditingItem(newItem);
+    setShowMedicineModal(true);
+  };
+
+  const handleInvestigationToggle = (testId) => {
+    setInvestigations(prev => {
+      if (prev.includes(testId)) {
+        // Remove investigation
+        const newInvestigations = prev.filter(t => t !== testId);
+        // Clean up related data
+        setInvestigationValues(prevValues => {
+          const newValues = { ...prevValues };
+          delete newValues[testId];
+          return newValues;
+        });
+        setInvestigationStatus(prevStatus => {
+          const newStatus = { ...prevStatus };
+          delete newStatus[testId];
+          return newStatus;
+        });
+        return newInvestigations;
+      } else {
+        // Add investigation
+        return [...prev, testId];
+      }
+    });
+  };
+
+  const handleInvestigationStatusChange = (testId, status) => {
+    setInvestigationStatus(prev => ({
+      ...prev,
+      [testId]: status
+    }));
+  };
+
+  const handleInvestigationValueChange = (testId, valueKey, value) => {
+    setInvestigationValues(prev => ({
+      ...prev,
+      [testId]: {
+        ...prev[testId],
+        [valueKey]: value
+      }
+    }));
+  };
+
+  const handleSymptomSelect = (symptom) => {
+    setSelectedSymptom(symptom);
+    setCurrentStep(2);
+  };
+
+  const handleExaminationSelect = (examId) => {
+    setSelectedExaminations(prev => ({
+      ...prev,
+      [examId]: !prev[examId]
+    }));
+    
+    if (!selectedExaminations[examId]) {
+      // Initialize value when selecting
+      setExaminationValues(prev => ({
+        ...prev,
+        [examId]: ''
+      }));
+    } else {
+      // Remove value when deselecting
+      setExaminationValues(prev => {
+        const newValues = { ...prev };
+        delete newValues[examId];
+        return newValues;
+      });
+    }
+  };
+
+  const handleExaminationValueChange = (examId, value) => {
+    setExaminationValues(prev => ({
+      ...prev,
+      [examId]: value
+    }));
+  };
+
+  const StepHeader = ({ step, title, icon: Icon }) => (
+    <div 
+      className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all ${currentStep === step ? 'bg-blue-50 border-2 border-blue-200' : 'bg-gray-50 hover:bg-gray-100'}`}
+      onClick={() => setCurrentStep(step)}
+    >
+      <Icon className={`h-6 w-6 ${currentStep === step ? 'text-blue-600' : 'text-gray-400'}`} />
+      <span className={`font-medium ${currentStep === step ? 'text-blue-800' : 'text-gray-600'}`}>
+        {step}. {title}
+      </span>
+    </div>
+  );
+
+  const renderStep1 = () => (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">इस नए मरीज़ की समस्या है</h2>
+        <p className="text-lg text-gray-600">This new patient is having</p>
+      </div>
+      
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {symptoms.map((symptom) => (
+          <button
+            key={symptom.id}
+            onClick={() => handleSymptomSelect(symptom.id)}
+            className={`${symptom.color} text-white p-4 rounded-lg font-medium hover:opacity-90 transition-all duration-200 transform hover:scale-105`}
+          >
+            {symptom.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderStep2 = () => (
+    <div className="space-y-6">
+      <div className="flex items-center space-x-2 mb-4">
+        <Thermometer className="h-6 w-6 text-red-500" />
+        <h2 className="text-xl font-bold text-gray-800">Fever - विवरण जोड़ें (Let us add details)</h2>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <div>
+            <h3 className="font-medium text-gray-700 mb-2">Duration (अवधि)</h3>
+            <div className="space-y-2">
+              {feverDetails.duration.map((option) => (
+                <label key={option} className="flex items-center space-x-2">
+                  <input type="radio" name="duration" className="text-blue-600" />
+                  <span className="text-sm">{option}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="font-medium text-gray-700 mb-2">Pattern (पैटर्न)</h3>
+            <div className="space-y-2">
+              {feverDetails.pattern.map((option) => (
+                <label key={option} className="flex items-center space-x-2">
+                  <input type="radio" name="pattern" className="text-blue-600" />
+                  <span className="text-sm">{option}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="font-medium text-gray-700 mb-2">Response to Antipyretics</h3>
+            <div className="space-y-2">
+              {feverDetails.response.map((option) => (
+                <label key={option} className="flex items-center space-x-2">
+                  <input type="radio" name="response" className="text-blue-600" />
+                  <span className="text-sm">{option}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <h3 className="font-medium text-gray-700 mb-2">साथ में क्या है? (Does he also have?)</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {feverDetails.associated.map((symptom) => (
+                <label key={symptom} className="flex items-center space-x-2">
+                  <input type="checkbox" className="text-blue-600" />
+                  <span className="text-sm">{symptom}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button 
+        onClick={() => setCurrentStep(3)}
+        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+      >
+        <span>आगे बढ़ें (Continue)</span>
+        <ChevronRight className="h-4 w-4" />
+      </button>
+    </div>
+  );
+
+  const renderStep3 = () => {
+    const redFlags = getRedFlags();
+    
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center space-x-2 mb-4">
+          <Stethoscope className="h-6 w-6 text-green-600" />
+          <h2 className="text-xl font-bold text-gray-800">Examination Findings (जांच के निष्कर्ष)</h2>
+        </div>
+
+        {/* Red Flags Alert - Only show if there are red flags */}
+        {redFlags.length > 0 && (
+          <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 mb-4">
+            <div className="flex items-center space-x-2 mb-3">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              <span className="font-bold text-red-800">🚨 RED FLAGS DETECTED - तुरंत ध्यान दें</span>
+            </div>
+            <div className="space-y-2">
+              {redFlags.map((flag, index) => (
+                <div key={index} className={`flex items-center space-x-2 p-2 rounded ${flag.critical ? 'bg-red-100 border border-red-300' : 'bg-yellow-100 border border-yellow-300'}`}>
+                  <span className={`w-3 h-3 rounded-full ${flag.critical ? 'bg-red-500' : 'bg-yellow-500'}`}></span>
+                  <span className={`font-medium ${flag.critical ? 'text-red-800' : 'text-yellow-800'}`}>
+                    {flag.text}
+                  </span>
+                  {flag.critical && (
+                    <span className="ml-auto bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
+                      CRITICAL
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+            {redFlags.some(flag => flag.critical) && (
+              <div className="mt-3 p-3 bg-red-600 text-white rounded-lg">
+                <strong>⚠️ IMMEDIATE ACTION REQUIRED:</strong> Critical values detected. Consider urgent intervention or specialist consultation.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Auto-pulled Vital Signs */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="font-medium text-blue-800 mb-2">Vital Signs (Auto-pulled from reception)</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div className="bg-white p-3 rounded border">
+              <div className="font-medium text-gray-700">Temperature</div>
+              <div className="text-lg text-blue-600">101.2°F</div>
+            </div>
+            <div className="bg-white p-3 rounded border">
+              <div className="font-medium text-gray-700">Pulse</div>
+              <div className="text-lg text-blue-600">92/min</div>
+            </div>
+            <div className="bg-white p-3 rounded border">
+              <div className="font-medium text-gray-700">BP</div>
+              <div className="text-lg text-blue-600">120/80 mmHg</div>
+            </div>
+            <div className="bg-white p-3 rounded border">
+              <div className="font-medium text-gray-700">RR</div>
+              <div className="text-lg text-blue-600">18/min</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Clinical Examination */}
+        <div className="space-y-4">
+          <h3 className="font-medium text-gray-700 text-lg">Clinical Examination</h3>
+          
+          <div className="grid gap-4">
+            {examinationItems.map((exam) => {
+              const hasRedFlag = redFlags.some(flag => flag.source === exam.id);
+              
+              return (
+                <div key={exam.id} className={`border rounded-lg p-4 ${hasRedFlag ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
+                  <div className="flex items-start space-x-3 mb-3">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedExaminations[exam.id] || false}
+                      onChange={() => handleExaminationSelect(exam.id)}
+                      className="text-green-600 mt-1" 
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium text-gray-800">{exam.label}</span>
+                        {hasRedFlag && (
+                          <AlertTriangle className="h-4 w-4 text-red-500" />
+                        )}
+                      </div>
+                      {exam.normalRange && (
+                        <div className="text-xs text-gray-500 mt-1">Normal: {exam.normalRange}</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {selectedExaminations[exam.id] && (
+                    <div className="mt-3 pl-8">
+                      {exam.type === 'input' && (
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            placeholder={exam.placeholder}
+                            value={examinationValues[exam.id] || ''}
+                            onChange={(e) => handleExaminationValueChange(exam.id, e.target.value)}
+                            className={`flex-1 p-2 border rounded-md text-sm ${hasRedFlag ? 'border-red-300 bg-white' : 'border-gray-300'}`}
+                          />
+                          {exam.unit && (
+                            <span className="text-sm text-gray-500 font-medium">{exam.unit}</span>
+                          )}
+                        </div>
+                      )}
+
+                      {exam.type === 'select' && (
+                        <select
+                          value={examinationValues[exam.id] || ''}
+                          onChange={(e) => handleExaminationValueChange(exam.id, e.target.value)}
+                          className={`w-full p-2 border rounded-md text-sm ${hasRedFlag ? 'border-red-300 bg-white' : 'border-gray-300'}`}
+                        >
+                          <option value="">Select option...</option>
+                          {exam.options.map((option) => (
+                            <option key={option} value={option}>{option}</option>
+                          ))}
+                        </select>
+                      )}
+
+                      {exam.type === 'textarea' && (
+                        <textarea
+                          placeholder={exam.placeholder}
+                          value={examinationValues[exam.id] || ''}
+                          onChange={(e) => handleExaminationValueChange(exam.id, e.target.value)}
+                          className={`w-full p-2 border rounded-md text-sm h-20 resize-none ${hasRedFlag ? 'border-red-300 bg-white' : 'border-gray-300'}`}
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Summary of Selected Examinations */}
+        {Object.keys(selectedExaminations).filter(key => selectedExaminations[key]).length > 0 && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h4 className="font-medium text-green-800 mb-2">Examination Summary</h4>
+            <div className="space-y-1">
+              {Object.keys(selectedExaminations)
+                .filter(key => selectedExaminations[key])
+                .map(examId => {
+                  const exam = examinationItems.find(e => e.id === examId);
+                  const value = examinationValues[examId];
+                  return (
+                    <div key={examId} className="text-sm text-green-700">
+                      <strong>{exam.label}:</strong> {value || 'Not specified'} {exam.unit || ''}
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        )}
+
+        <button 
+          onClick={() => setCurrentStep(4)}
+          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+        >
+          <span>Investigation करें</span>
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  };
+
+  const renderStep4 = () => (
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold text-gray-800">जांच करवाएं (Investigations)</h2>
+      
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h3 className="font-medium text-blue-800 mb-3">Recommended for Fever (बुखार के लिए सुझाई गई जांच)</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {investigationOptions.map((test) => (
+            <button
+              key={test.id}
+              onClick={() => handleInvestigationToggle(test.id)}
+              className={`p-3 rounded border text-sm text-left transition-colors ${
+                investigations.includes(test.id) 
+                  ? 'bg-blue-600 text-white border-blue-600' 
+                  : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
+              }`}
+            >
+              <div className="font-medium">{test.name}</div>
+              {test.hasValues && investigations.includes(test.id) && (
+                <div className="text-xs mt-1 opacity-75">
+                  Click to configure values
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Selected Investigations Configuration */}
+      {investigations.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="font-medium text-gray-700 text-lg">Configure Selected Investigations</h3>
+          
+          {investigations.map((testId) => {
+            const test = investigationOptions.find(t => t.id === testId);
+            const status = investigationStatus[testId] || 'todo';
+            
+            return (
+              <div key={testId} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-medium text-gray-800">{test.name}</h4>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm text-gray-600">Status:</label>
+                      <select
+                        value={status}
+                        onChange={(e) => handleInvestigationStatusChange(testId, e.target.value)}
+                        className="text-sm border border-gray-300 rounded px-2 py-1"
+                      >
+                        <option value="todo">To be done</option>
+                        <option value="done">Already done</option>
+                      </select>
+                    </div>
+                    
+                    {status === 'done' && (
+                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+                        ✓ Done
+                      </span>
+                    )}
+                    {status === 'todo' && (
+                      <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
+                        ⏳ To Do
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Values Input - Only show if status is 'done' and test has values */}
+                {status === 'done' && test.hasValues && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <h5 className="text-sm font-medium text-gray-700 mb-3">Enter Results:</h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {test.values.map((valueKey) => (
+                        <div key={valueKey}>
+                          <label className="block text-xs text-gray-600 mb-1">{valueKey}</label>
+                          <input
+                            type="text"
+                            placeholder={`Enter ${valueKey}`}
+                            value={investigationValues[testId]?.[valueKey] || ''}
+                            onChange={(e) => handleInvestigationValueChange(testId, valueKey, e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded text-sm"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Instructions for 'todo' investigations */}
+                {status === 'todo' && (
+                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                    <p className="text-sm text-yellow-800">
+                      📋 This investigation will be prescribed to the patient
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Summary */}
+      {investigations.length > 0 && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <h4 className="font-medium text-green-800 mb-2">Investigation Summary</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h5 className="text-sm font-medium text-green-700 mb-1">✅ Already Done ({investigations.filter(id => investigationStatus[id] === 'done').length})</h5>
+              <ul className="text-sm text-green-600 space-y-1">
+                {investigations
+                  .filter(id => investigationStatus[id] === 'done')
+                  .map(id => {
+                    const test = investigationOptions.find(t => t.id === id);
+                    return <li key={id}>• {test.name}</li>;
+                  })}
+              </ul>
+            </div>
+            <div>
+              <h5 className="text-sm font-medium text-yellow-700 mb-1">⏳ To Be Done ({investigations.filter(id => investigationStatus[id] !== 'done').length})</h5>
+              <ul className="text-sm text-yellow-600 space-y-1">
+                {investigations
+                  .filter(id => investigationStatus[id] !== 'done')
+                  .map(id => {
+                    const test = investigationOptions.find(t => t.id === id);
+                    return <li key={id}>• {test.name}</li>;
+                  })}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-4">
+        <input 
+          type="text" 
+          placeholder="कोई और जांच जोड़ें (Add other investigations)"
+          className="w-full p-3 border border-gray-300 rounded-lg"
+        />
+      </div>
+
+      <button 
+        onClick={() => setCurrentStep(5)}
+        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+      >
+        <span>Diagnosis करें</span>
+        <ChevronRight className="h-4 w-4" />
+      </button>
+    </div>
+  );
+
+  const renderStep5 = () => (
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold text-gray-800">निदान (Diagnosis)</h2>
+      
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Primary Diagnosis (मुख्य निदान)
+          </label>
+          <input 
+            type="text"
+            value={diagnosis}
+            onChange={(e) => setDiagnosis(e.target.value)}
+            placeholder="e.g., Viral fever, UTI, Gastroenteritis"
+            className="w-full p-3 border border-gray-300 rounded-lg"
+          />
+        </div>
+
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h3 className="font-medium text-gray-700 mb-2">Suggested Diagnoses (सुझाए गए निदान)</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {['Viral fever', 'Bacterial infection', 'UTI', 'Gastroenteritis', 'Malaria', 'Dengue'].map((diag) => (
+              <button
+                key={diag}
+                onClick={() => setDiagnosis(diag)}
+                className="text-left p-2 text-sm bg-white border border-gray-200 rounded hover:bg-blue-50"
+              >
+                {diag}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <button 
+        onClick={() => setCurrentStep(6)}
+        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+      >
+        <span>Prescription लिखें</span>
+        <ChevronRight className="h-4 w-4" />
+      </button>
+    </div>
+  );
+
+  const renderStep6 = () => (
+    <div className="space-y-6">
+      <div className="flex items-center space-x-2">
+        <Pill className="h-6 w-6 text-purple-600" />
+        <h2 className="text-xl font-bold text-gray-800">दवा लिखें (Prepare Prescription)</h2>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {prescriptionTemplates.map((template) => (
+          <button
+            key={template.id}
+            onClick={() => handleTemplateSelect(template)}
+            className={`p-4 border rounded-lg text-center transition-colors ${
+              selectedTemplate?.id === template.id
+                ? 'bg-purple-600 text-white border-purple-600'
+                : 'bg-purple-100 border-purple-200 hover:bg-purple-200'
+            }`}
+          >
+            <div className={`font-medium ${selectedTemplate?.id === template.id ? 'text-white' : 'text-purple-800'}`}>
+              Template {template.id}
+            </div>
+            <div className={`text-sm mt-1 ${selectedTemplate?.id === template.id ? 'text-purple-100' : 'text-purple-600'}`}>
+              {template.name}
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Medicine List */}
+      {prescriptionItems.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-gray-700">Medicine List</h3>
+            <button
+              onClick={handleAddNewMedicine}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm"
+            >
+              + Add Medicine
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {prescriptionItems.map((item, index) => (
+              <div key={item.id} className="border border-gray-200 rounded-lg p-4">
+                {editingItem?.id === item.id ? (
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    <input
+                      type="text"
+                      placeholder="Medicine name"
+                      value={editingItem.medicine}
+                      onChange={(e) => setEditingItem({...editingItem, medicine: e.target.value})}
+                      className="p-2 border border-gray-300 rounded"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Strength"
+                      value={editingItem.strength}
+                      onChange={(e) => setEditingItem({...editingItem, strength: e.target.value})}
+                      className="p-2 border border-gray-300 rounded"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Frequency"
+                      value={editingItem.frequency}
+                      onChange={(e) => setEditingItem({...editingItem, frequency: e.target.value})}
+                      className="p-2 border border-gray-300 rounded"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Duration"
+                      value={editingItem.duration}
+                      onChange={(e) => setEditingItem({...editingItem, duration: e.target.value})}
+                      className="p-2 border border-gray-300 rounded"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Instructions"
+                      value={editingItem.instructions}
+                      onChange={(e) => setEditingItem({...editingItem, instructions: e.target.value})}
+                      className="p-2 border border-gray-300 rounded"
+                    />
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleUpdateItem(editingItem)}
+                        className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditingItem(null)}
+                        className="bg-gray-400 text-white px-3 py-1 rounded text-sm hover:bg-gray-500"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3 flex-grow">
+                      <div className="font-medium text-gray-800">{item.medicine}</div>
+                      <div className="text-gray-600">{item.strength}</div>
+                      <div className="text-gray-600">{item.frequency}</div>
+                      <div className="text-gray-600">{item.duration}</div>
+                      <div className="text-gray-600">{item.instructions}</div>
+                    </div>
+                    <div className="flex space-x-2 ml-4">
+                      <button
+                        onClick={() => handleEditItem(item)}
+                        className="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteItem(item.id)}
+                        className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <h3 className="font-medium text-gray-700 mb-3">Prescription Preview</h3>
+        <div className="bg-gray-50 p-4 rounded border-2 border-dashed border-gray-300 min-h-32">
+          <div className="text-sm text-gray-600 mb-2">Dr. [Name] | [Clinic Name]</div>
+          <div className="text-sm text-gray-600 mb-4">Patient: {patientInfo.name} | Age: {patientInfo.age} | UHID: {patientInfo.uhid}</div>
+          <div className="text-sm font-medium text-gray-800">Diagnosis: {diagnosis || 'Viral fever'}</div>
+          <div className="mt-3 space-y-1">
+            {prescriptionItems.length > 0 ? (
+              prescriptionItems.map((item, index) => (
+                <div key={item.id} className="text-sm">
+                  {index + 1}. {item.medicine} {item.strength} {item.frequency} × {item.duration}
+                  {item.instructions && ` - ${item.instructions}`}
+                </div>
+              ))
+            ) : (
+              <div className="text-sm text-gray-500">No medicines added yet</div>
+            )}
+          </div>
+          <div className="mt-4 text-sm text-gray-600">
+            Follow up: 3 days or if symptoms worsen
+          </div>
+        </div>
+      </div>
+
+      <div className="flex space-x-4">
+        <button className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 flex items-center space-x-2">
+          <FileText className="h-4 w-4" />
+          <span>Print Prescription</span>
+        </button>
+        <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+          Save & Next Patient
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="bg-blue-600 text-white p-2 rounded-lg">
+                <User className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-800">Dr. Consultation System</h1>
+                <p className="text-sm text-gray-600">Indian Medical Practice Workflow</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4 text-sm text-gray-600">
+              <Clock className="h-4 w-4" />
+              <span>13 Aug 2025, 2:30 PM</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Patient Info Bar */}
+      <div className="bg-blue-50 border-b">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center space-x-6 text-sm">
+            <span><strong>Patient:</strong> {patientInfo.name}</span>
+            <span><strong>Age:</strong> {patientInfo.age}</span>
+            <span><strong>Gender:</strong> {patientInfo.gender}</span>
+            <span><strong>UHID:</strong> {patientInfo.uhid}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress Steps */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+            <StepHeader step={1} title="Chief Complaint" icon={User} />
+            <StepHeader step={2} title="Details" icon={FileText} />
+            <StepHeader step={3} title="Examination" icon={Stethoscope} />
+            <StepHeader step={4} title="Investigations" icon={FileText} />
+            <StepHeader step={5} title="Diagnosis" icon={AlertTriangle} />
+            <StepHeader step={6} title="Prescription" icon={Pill} />
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          {currentStep === 1 && renderStep1()}
+          {currentStep === 2 && renderStep2()}
+          {currentStep === 3 && renderStep3()}
+          {currentStep === 4 && renderStep4()}
+          {currentStep === 5 && renderStep5()}
+          {currentStep === 6 && renderStep6()}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="bg-gray-50 border-t py-4">
+        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-gray-500">
+          Optimized for Indian Medical Practice | Step {currentStep} of 6
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default IndianDoctorWorkflow;

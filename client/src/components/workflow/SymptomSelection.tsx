@@ -9,6 +9,10 @@ interface SymptomSelectionProps {
 
 export function SymptomSelection({ selectedSymptom, onSymptomSelect, onNextStep }: SymptomSelectionProps) {
   const selectedSymptomData = symptoms.find(s => s.id === selectedSymptom);
+  
+  console.log('Selected symptom:', selectedSymptom);
+  console.log('Selected symptom data:', selectedSymptomData);
+  console.log('Symptoms available:', symptoms.map(s => s.id));
 
   return (
     <div className="max-w-4xl mx-auto">

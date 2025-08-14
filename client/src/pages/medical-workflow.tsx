@@ -11,7 +11,7 @@ import type { Patient, Consultation } from "@shared/schema";
 
 export default function MedicalWorkflow() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedSymptom, setSelectedSymptom] = useState('');
+  const [selectedSymptom, setSelectedSymptom] = useState('fever');
   const [symptomDetails, setSymptomDetails] = useState({});
   const [examinationFindings, setExaminationFindings] = useState({});
   const [selectedExaminations, setSelectedExaminations] = useState({});

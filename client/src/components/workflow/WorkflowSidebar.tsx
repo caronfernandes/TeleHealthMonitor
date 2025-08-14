@@ -17,7 +17,8 @@ export function WorkflowSidebar({ currentStep, patientInfo, onStepChange }: Work
     { id: 2, title: "Symptom Details", subtitle: "Assessment & associated symptoms" },
     { id: 3, title: "Physical Examination", subtitle: "Vital signs & red flag alerts" },
     { id: 4, title: "Investigations", subtitle: "Lab tests & imaging" },
-    { id: 5, title: "Prescription", subtitle: "Treatment plan & medications" },
+    { id: 5, title: "Diagnosis", subtitle: "Clinical assessment & diagnosis" },
+    { id: 6, title: "Prescription", subtitle: "Treatment plan & medications" },
   ];
 
   return (

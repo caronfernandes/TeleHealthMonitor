@@ -5,6 +5,7 @@ import { SymptomSelection } from "@/components/workflow/SymptomSelectionSimple";
 import { SymptomDetails } from "@/components/workflow/SymptomDetails";
 import { PhysicalExamination } from "@/components/workflow/PhysicalExamination";
 import { InvestigationManagement } from "@/components/workflow/InvestigationManagement";
+import { DiagnosisSelection } from "@/components/workflow/DiagnosisSelection";
 import { PrescriptionManagement } from "@/components/workflow/PrescriptionManagement";
 import { MedicineModal } from "@/components/workflow/MedicineModal";
 import { getRedFlags } from "@/lib/medical-data";
@@ -195,6 +196,13 @@ export default function MedicalWorkflow() {
         );
       case 5:
         return (
+          <DiagnosisSelection
+            onPreviousStep={() => setCurrentStep(4)}
+            onNextStep={() => setCurrentStep(6)}
+          />
+        );
+      case 6:
+        return (
           <PrescriptionManagement
             selectedTemplate={selectedTemplate}
             prescriptionItems={prescriptionItems}
@@ -229,6 +237,7 @@ export default function MedicalWorkflow() {
                                    currentStep === 2 ? 'Symptom Details' :
                                    currentStep === 3 ? 'Physical Examination' :
                                    currentStep === 4 ? 'Investigations' :
+                                   currentStep === 5 ? 'Clinical Diagnosis' :
                                    'Prescription'}
               </p>
             </div>

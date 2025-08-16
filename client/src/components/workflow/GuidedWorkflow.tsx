@@ -26,6 +26,7 @@ import {
   X,
   Activity,
   Clipboard,
+  Printer,
 } from "lucide-react";
 import {
   examinationItems,
@@ -1770,8 +1771,40 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
           {/* Templates Panel */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Prescription Templates
+              Quick Add Medicine
             </h3>
+            
+            {/* Quick Add Form */}
+            <div className="space-y-3 mb-6 p-4 bg-blue-50 rounded-lg border">
+              <h4 className="font-medium text-blue-900 mb-3">Add New Medicine</h4>
+              <input
+                type="text"
+                placeholder="Medicine name (e.g., Paracetamol 500mg)"
+                className="w-full p-2 border border-gray-300 rounded text-sm"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    const target = e.target as HTMLInputElement;
+                    if (target.value.trim()) {
+                      const newMedicine = {
+                        id: Date.now().toString(),
+                        medicine: target.value.trim(),
+                        strength: '500mg',
+                        frequency: 'BD',
+                        duration: '5 Days',
+                        instructions: 'After food'
+                      };
+                      setPrescriptionItems(prev => [...prev, newMedicine]);
+                      target.value = '';
+                    }
+                  }
+                }}
+              />
+              <p className="text-xs text-blue-700">Press Enter to add with default settings (BD, 5 days, after food)</p>
+            </div>
+            
+            <h4 className="text-md font-medium text-gray-900 mb-4">
+              Or Select Template
+            </h4>
 
             <div className="space-y-3">
               {[
@@ -1820,10 +1853,12 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
               <h3 className="text-lg font-semibold text-gray-900">
                 Current Prescription
               </h3>
-              <Button onClick={handleAddNewMedicine} className="px-4 py-2">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Medicine
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={handleAddNewMedicine} variant="outline" size="sm">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Add Detailed
+                </Button>
+              </div>
             </div>
 
             {/* Prescription Items */}
@@ -1878,8 +1913,12 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
               )}
             </div>
 
-            {/* Complete Consultation */}
-            <div className="text-center pt-6 border-t border-gray-200">
+            {/* Actions */}
+            <div className="flex justify-center items-center gap-4 pt-6 border-t border-gray-200">
+              <Button variant="outline" className="px-6 py-3">
+                <Printer className="w-5 h-5 mr-2" />
+                Print Prescription
+              </Button>
               <Button className="px-8 py-3 text-lg">
                 Complete Consultation
                 <ChevronRight className="w-5 h-5 ml-2" />

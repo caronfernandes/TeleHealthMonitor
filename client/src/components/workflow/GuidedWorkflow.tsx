@@ -46,6 +46,15 @@ interface WorkflowStep {
   showMore?: boolean;
 }
 
+interface MedicineItem {
+  id: number;
+  medicine: string;
+  strength: string;
+  frequency: string;
+  duration: string;
+  instructions: string;
+}
+
 const SYMPTOM_WORKFLOW: Record<string, WorkflowStep[]> = {
   fever: [
     {
@@ -196,8 +205,8 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
   const [selectedDiagnoses, setSelectedDiagnoses] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
-  const [prescriptionItems, setPrescriptionItems] = useState<any[]>([]);
-  const [editingItem, setEditingItem] = useState<any>(null);
+  const [prescriptionItems, setPrescriptionItems] = useState<MedicineItem[]>([]);
+  const [editingItem, setEditingItem] = useState<MedicineItem | null>(null);
   const [showMedicineModal, setShowMedicineModal] = useState(false);
   const [showMoreInvestigations, setShowMoreInvestigations] = useState(false);
 
@@ -1229,12 +1238,12 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
       );
     };
 
-    const handleEditItem = (item: any) => {
+    const handleEditItem = (item: MedicineItem) => {
       setEditingItem({ ...item });
       setShowMedicineModal(true);
     };
 
-    const handleDeleteItem = (itemId: string) => {
+    const handleDeleteItem = (itemId: number) => {
       setPrescriptionItems((prev) => prev.filter((item) => item.id !== itemId));
     };
 
@@ -1420,7 +1429,7 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
                     type="text"
                     value={editingItem?.medicine || ""}
                     onChange={(e) =>
-                      setEditingItem((prev) =>
+                      setEditingItem((prev: MedicineItem | null) =>
                         prev ? { ...prev, medicine: e.target.value } : null,
                       )
                     }
@@ -1437,7 +1446,7 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
                     type="text"
                     value={editingItem?.strength || ""}
                     onChange={(e) =>
-                      setEditingItem((prev) =>
+                      setEditingItem((prev: MedicineItem | null) =>
                         prev ? { ...prev, strength: e.target.value } : null,
                       )
                     }
@@ -1453,7 +1462,7 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
                   <select
                     value={editingItem?.frequency || ""}
                     onChange={(e) =>
-                      setEditingItem((prev) =>
+                      setEditingItem((prev: MedicineItem | null) =>
                         prev ? { ...prev, frequency: e.target.value } : null,
                       )
                     }
@@ -1476,7 +1485,7 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
                     type="text"
                     value={editingItem?.duration || ""}
                     onChange={(e) =>
-                      setEditingItem((prev) =>
+                      setEditingItem((prev: MedicineItem | null) =>
                         prev ? { ...prev, duration: e.target.value } : null,
                       )
                     }
@@ -1492,7 +1501,7 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
                   <select
                     value={editingItem?.instructions || ""}
                     onChange={(e) =>
-                      setEditingItem((prev) =>
+                      setEditingItem((prev: MedicineItem | null) =>
                         prev ? { ...prev, instructions: e.target.value } : null,
                       )
                     }
@@ -1641,4 +1650,3 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
       </div>
     );
   };
-}

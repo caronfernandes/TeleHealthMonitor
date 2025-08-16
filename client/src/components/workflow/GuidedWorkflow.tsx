@@ -571,45 +571,59 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {[
           {
             id: "fever",
             label: "Fever",
-            icon: Thermometer,
-            color: "bg-red-500",
             description: "High body temperature",
           },
           {
             id: "cough",
-            label: "Cough",
-            icon: Stethoscope,
-            color: "bg-blue-500",
+            label: "Cough", 
             description: "Persistent coughing",
           },
           {
             id: "pain",
             label: "Pain",
-            icon: Clock,
-            color: "bg-orange-500",
             description: "Body pain or discomfort",
+          },
+          {
+            id: "headache",
+            label: "Headache",
+            description: "Head pain or discomfort",
+          },
+          {
+            id: "nausea",
+            label: "Nausea",
+            description: "Feeling sick to stomach",
+          },
+          {
+            id: "fatigue",
+            label: "Fatigue",
+            description: "Extreme tiredness",
+          },
+          {
+            id: "dizziness",
+            label: "Dizziness",
+            description: "Lightheaded feeling",
+          },
+          {
+            id: "breathlessness",
+            label: "Breathlessness",
+            description: "Difficulty breathing",
           },
         ].map((symptom) => (
           <Card
             key={symptom.id}
-            className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
+            className="cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-[1.02]"
             onClick={() => handleSymptomSelect(symptom.id)}
           >
-            <CardContent className="p-6 text-center">
-              <div
-                className={`w-16 h-16 ${symptom.color} rounded-full flex items-center justify-center mx-auto mb-4`}
-              >
-                <symptom.icon className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <CardContent className="p-4 text-center">
+              <h3 className="text-base font-medium text-gray-900 mb-1">
                 {symptom.label}
               </h3>
-              <p className="text-sm text-gray-600">{symptom.description}</p>
+              <p className="text-xs text-gray-600">{symptom.description}</p>
             </CardContent>
           </Card>
         ))}
@@ -867,138 +881,6 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
         <p className="text-gray-600">
           Record vital signs and clinical findings
         </p>
-        
-        {/* Assessment Tools */}
-        <div className="flex justify-center space-x-4 mt-6">
-          <Dialog open={showPainScoreModal} onOpenChange={setShowPainScoreModal}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center">
-                <Activity className="w-4 h-4 mr-2" />
-                Pain Score Assessment
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Pain Score Assessment</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <p className="text-sm text-gray-600">
-                  Rate the patient's pain on a scale of 0-10
-                </p>
-                <div className="grid grid-cols-11 gap-2">
-                  {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
-                    <button
-                      key={score}
-                      onClick={() => setPainScore(score)}
-                      className={`w-8 h-8 rounded-full border-2 text-sm font-medium transition-colors ${
-                        painScore === score
-                          ? "bg-red-500 text-white border-red-500"
-                          : "bg-white text-gray-600 border-gray-300 hover:border-red-300"
-                      }`}
-                    >
-                      {score}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>No Pain</span>
-                  <span>Worst Pain</span>
-                </div>
-                {painScore !== null && (
-                  <div className="mt-4 p-3 bg-gray-50 rounded">
-                    <p className="text-sm font-medium">
-                      Selected Pain Score: <span className="text-red-600">{painScore}/10</span>
-                    </p>
-                  </div>
-                )}
-                <Button 
-                  onClick={() => setShowPainScoreModal(false)} 
-                  className="w-full"
-                >
-                  Save Assessment
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={showProceduresModal} onOpenChange={setShowProceduresModal}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center">
-                <Clipboard className="w-4 h-4 mr-2" />
-                Procedures Done
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Procedures Done</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <p className="text-sm text-gray-600">
-                  Select procedures performed during examination
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    "Blood Pressure Check",
-                    "Temperature Check", 
-                    "Pulse Rate Check",
-                    "Respiratory Rate",
-                    "Oxygen Saturation",
-                    "Blood Sugar Test",
-                    "ECG",
-                    "Wound Dressing",
-                    "IV Cannulation",
-                    "Injection Given",
-                    "Nebulization",
-                    "Catheter Insertion"
-                  ].map((procedure) => (
-                    <button
-                      key={procedure}
-                      onClick={() => {
-                        if (procedures.includes(procedure)) {
-                          setProcedures(procedures.filter(p => p !== procedure));
-                        } else {
-                          setProcedures([...procedures, procedure]);
-                        }
-                      }}
-                      className={`p-3 text-left border rounded-lg text-sm transition-colors ${
-                        procedures.includes(procedure)
-                          ? "bg-green-50 border-green-300 text-green-900"
-                          : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      <div className="font-medium">{procedure}</div>
-                      {procedures.includes(procedure) && (
-                        <div className="text-xs text-green-600 mt-1 font-medium">
-                          ✓ Completed
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-                {procedures.length > 0 && (
-                  <div className="mt-4 p-3 bg-gray-50 rounded">
-                    <p className="text-sm font-medium mb-2">
-                      Completed Procedures ({procedures.length}):
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {procedures.map((procedure) => (
-                        <Badge key={procedure} variant="secondary" className="text-xs">
-                          {procedure}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <Button 
-                  onClick={() => setShowProceduresModal(false)} 
-                  className="w-full"
-                >
-                  Save Procedures
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
       </div>
 
       {/* Red Flags Alert */}

@@ -189,7 +189,7 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
     }
     
     // If no associated symptoms or no details needed, go to examination
-    setWorkflowPhase('examination');
+    setTimeout(() => setWorkflowPhase('examination'), 300);
   };
 
   const getCurrentStep = (): WorkflowStep | null => {
@@ -253,7 +253,15 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
 
   const renderQuestionStep = () => {
     const currentStep = getCurrentStep();
-    if (!currentStep) return null;
+    if (!currentStep) {
+      // If no current step found, automatically go to examination
+      setTimeout(() => setWorkflowPhase('examination'), 100);
+      return (
+        <div className="text-center py-12">
+          <p className="text-gray-600">Moving to examination...</p>
+        </div>
+      );
+    }
 
     const isMultiple = currentStep.type === 'multiple';
     const currentAnswers = answers[currentStep.id] || [];
@@ -362,11 +370,23 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
         {isMultiple && currentAnswers.length > 0 && (
           <div className="text-center pt-6">
             <Button onClick={handleContinueFromMultiple} className="px-8">
-              Continue
+              Continue to Examination
               <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
         )}
+        
+        {/* Manual navigation fallback */}
+        <div className="text-center pt-6">
+          <Button 
+            variant="outline" 
+            onClick={() => setWorkflowPhase('examination')} 
+            className="px-6"
+          >
+            Skip to Physical Examination
+            <ChevronRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
       </div>
     );
   };

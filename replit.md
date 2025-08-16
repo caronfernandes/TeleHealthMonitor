@@ -61,6 +61,8 @@ Preferred communication style: Simple, everyday language.
 - **Workflow Restructuring**: Separated symptom selection from detailed assessment into distinct steps
 - **Enhanced Symptom Details**: Added comprehensive assessment forms for primary and associated symptoms
 - **Associated Symptoms Enhancement**: Added detailed multi-step workflows for rash, cough, and headache symptoms with specific questions for type, location, duration, and severity
+- **Multi-level Symptom Assessment**: Complete associated symptom specification workflow with dedicated phase for detailed assessment of each selected associated symptom (rash, cough, headache, joint pain, burning micturition, vomiting, abdominal pain, sore throat, weight loss, night sweats)
+- **Progressive Symptom Evaluation**: Each associated symptom now has its own detailed questioning sequence including onset, character, severity, location, and other relevant clinical parameters
 - **Examination Interface Optimization**: Physical examination now shows only 5 items initially with expandable "Show more" button for better user experience
 - **Streamlined Red Flags**: Integrated red flag detection directly into physical examination interface
 - **Investigation Filtering**: Shows top 5 relevant tests with expandable "Show more" option for streamlined workflow

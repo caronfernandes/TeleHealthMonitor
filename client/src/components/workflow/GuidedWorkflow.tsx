@@ -446,6 +446,7 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
   const [editingItem, setEditingItem] = useState<MedicineItem | null>(null);
   const [showMedicineModal, setShowMedicineModal] = useState(false);
   const [showMoreInvestigations, setShowMoreInvestigations] = useState(false);
+  const [investigationStep, setInvestigationStep] = useState<1 | 2>(1);
   const [showMoreExaminations, setShowMoreExaminations] = useState(false);
   const [selectedAssociatedSymptoms, setSelectedAssociatedSymptoms] = useState<string[]>([]);
   const [currentAssociatedSymptom, setCurrentAssociatedSymptom] = useState<string>("");
@@ -1084,209 +1085,307 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
     const relevantTests = investigationOptions.slice(0, 5);
     const otherTests = investigationOptions.slice(5);
 
+    if (investigationStep === 1) {
+      return (
+        <div className="max-w-6xl mx-auto space-y-6">
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-blue-500 rounded-full">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-blue-900">
+                    Step 1: Record Completed Investigations
+                  </h3>
+                  <p className="text-blue-700">
+                    Select investigations already done by patient and enter values
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Completed Investigations (पूर्ण जांच)
+            </h2>
+            <p className="text-gray-600">
+              Select tests already done by patient and record their values
+            </p>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Available Tests (उपलब्ध जांच)
+            </h3>
+
+            {/* Primary 5 investigations */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+              {relevantTests.map((test) => (
+                <button
+                  key={test.id}
+                  onClick={() => handleInvestigationToggle(test.id)}
+                  className={`p-3 text-left border rounded-lg transition-colors ${
+                    investigations.includes(test.id)
+                      ? "bg-green-50 border-green-300 text-green-900"
+                      : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <div className="font-medium">{test.name}</div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {test.normalRange}
+                  </div>
+                  {investigations.includes(test.id) && (
+                    <div className="text-xs text-green-600 mt-1 font-medium">
+                      ✓ Selected for data entry
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Show More/Less Toggle */}
+            {otherTests.length > 0 && (
+              <div className="text-center">
+                {!showMoreInvestigations ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowMoreInvestigations(true)}
+                    className="text-blue-600 border-blue-300"
+                  >
+                    <ChevronDown className="w-4 h-4 mr-2" />
+                    Show more investigations ({otherTests.length})
+                  </Button>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                      {otherTests.map((test) => (
+                        <button
+                          key={test.id}
+                          onClick={() => handleInvestigationToggle(test.id)}
+                          className={`p-3 text-left border rounded-lg transition-colors ${
+                            investigations.includes(test.id)
+                              ? "bg-green-50 border-green-300 text-green-900"
+                              : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          <div className="font-medium">{test.name}</div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {test.normalRange}
+                          </div>
+                          {investigations.includes(test.id) && (
+                            <div className="text-xs text-green-600 mt-1 font-medium">
+                              ✓ Selected for data entry
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowMoreInvestigations(false)}
+                      className="text-blue-600 border-blue-300"
+                    >
+                      <ChevronUp className="w-4 h-4 mr-2" />
+                      Show less
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Selected investigations data entry */}
+          {investigations.length > 0 && (
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Enter Test Results (जांच परिणाम दर्ज करें)
+              </h3>
+              <div className="space-y-4">
+                {investigations.map((testId) => {
+                  const test = investigationOptions.find((t) => t.id === testId);
+                  const values = investigationValues[testId] || {};
+
+                  return (
+                    <div
+                      key={testId}
+                      className="border border-gray-200 rounded-lg p-4"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-medium text-gray-900">
+                          {test?.name}
+                        </h4>
+                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+                          Done
+                        </span>
+                      </div>
+
+                      {test?.hasValues && (
+                        <div className="space-y-3">
+                          {test.values?.map((valueKey) => (
+                            <div key={valueKey} className="grid grid-cols-3 gap-4">
+                              <div className="text-sm font-medium text-gray-700">
+                                {valueKey}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                Normal: {test.normalRange}
+                              </div>
+                              <input
+                                type="text"
+                                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter value"
+                                value={values[valueKey] || ""}
+                                onChange={(e) =>
+                                  handleInvestigationValueChange(
+                                    testId,
+                                    valueKey,
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="text-center pt-6">
+            <div className="flex justify-center space-x-4">
+              <Button
+                variant="outline"
+                onClick={() => setWorkflowPhase("examination")}
+              >
+                <ChevronLeft className="w-4 h-4 mr-2" />
+                Back to Examination
+              </Button>
+              <Button
+                onClick={() => setInvestigationStep(2)}
+                className="px-8"
+              >
+                Next: Recommend Tests
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Step 2: Recommend investigations to do next
     return (
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* Back Navigation */}
-        <div className="flex items-center mb-4">
-          <Button
-            variant="outline"
-            onClick={() => setWorkflowPhase("examination")}
-            className="mr-4"
-          >
-            <ChevronLeft className="w-4 h-4 mr-2" />
-            Back to Examination
-          </Button>
-        </div>
+        <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3">
+              <div className="p-3 bg-purple-500 rounded-full">
+                <FileText className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-purple-900">
+                  Step 2: Recommend Additional Investigations
+                </h3>
+                <p className="text-purple-700">
+                  Select investigations to recommend for further diagnosis
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Investigations (जांच करवाएं)
+            Recommended Investigations (सुझाई गई जांच)
           </h2>
           <p className="text-gray-600">
-            Select and configure recommended tests
+            Select additional tests to prescribe to the patient
           </p>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <h3 className="font-medium text-blue-800 mb-3">
-            Recommended for {currentSymptom || "Fever"} (बुखार के लिए सुझाई गई
-            जांच)
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            Available Tests to Recommend
           </h3>
 
-          {/* Primary 5 investigations */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-            {relevantTests.map((test) => (
-              <button
-                key={test.id}
-                onClick={() => handleInvestigationToggle(test.id)}
-                className={`p-3 rounded border text-sm text-left transition-colors ${
-                  investigations.includes(test.id)
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-blue-600 border-blue-300 hover:bg-blue-50"
-                }`}
-              >
-                <div className="font-medium">{test.name}</div>
-                {test.hasValues && investigations.includes(test.id) && (
-                  <div className="text-xs mt-1 opacity-75">
-                    Click to configure values
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* Show More/Less Toggle */}
-          {otherTests.length > 0 && (
-            <div className="text-center">
-              {!showMoreInvestigations ? (
-                <Button
-                  variant="outline"
-                  onClick={() => setShowMoreInvestigations(true)}
-                  className="text-blue-600 border-blue-300"
-                >
-                  <ChevronDown className="w-4 h-4 mr-2" />
-                  Show more investigations ({otherTests.length})
-                </Button>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-                    {otherTests.map((test) => (
-                      <button
-                        key={test.id}
-                        onClick={() => handleInvestigationToggle(test.id)}
-                        className={`p-3 rounded border text-sm text-left transition-colors ${
-                          investigations.includes(test.id)
-                            ? "bg-blue-600 text-white border-blue-600"
-                            : "bg-white text-blue-600 border-blue-300 hover:bg-blue-50"
-                        }`}
-                      >
-                        <div className="font-medium">{test.name}</div>
-                        {test.hasValues && investigations.includes(test.id) && (
-                          <div className="text-xs mt-1 opacity-75">
-                            Click to configure values
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowMoreInvestigations(false)}
-                    className="text-blue-600 border-blue-300"
-                  >
-                    <ChevronUp className="w-4 h-4 mr-2" />
-                    Show less
-                  </Button>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Selected Investigations Configuration */}
-        {investigations.length > 0 && (
-          <div className="space-y-4 mb-6">
-            <h3 className="font-medium text-gray-700 text-lg">
-              Configure Selected Investigations
-            </h3>
-
-            {investigations.map((testId) => {
-              const test = investigationOptions.find((t) => t.id === testId);
-              const status = investigationStatus[testId] || "todo";
-
+            {investigationOptions.map((test) => {
+              const isRecommended = investigationStatus[test.id] === "todo";
               return (
-                <div
-                  key={testId}
-                  className="border border-gray-200 rounded-lg p-4"
+                <button
+                  key={test.id}
+                  onClick={() => 
+                    handleInvestigationStatusChange(
+                      test.id, 
+                      isRecommended ? "" : "todo"
+                    )
+                  }
+                  className={`p-3 text-left border rounded-lg transition-colors ${
+                    isRecommended
+                      ? "bg-orange-50 border-orange-300 text-orange-900"
+                      : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                  }`}
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-medium text-gray-800">{test?.name}</h4>
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-2">
-                        <label className="text-sm text-gray-600">Status:</label>
-                        <select
-                          value={status}
-                          onChange={(e) =>
-                            handleInvestigationStatusChange(
-                              testId,
-                              e.target.value,
-                            )
-                          }
-                          className="text-sm border border-gray-300 rounded px-2 py-1"
-                        >
-                          <option value="todo">To be done</option>
-                          <option value="done">Already done</option>
-                        </select>
-                      </div>
-
-                      {status === "done" && (
-                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
-                          ✓ Done
-                        </span>
-                      )}
-                      {status === "todo" && (
-                        <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
-                          ⏳ To Do
-                        </span>
-                      )}
-                    </div>
+                  <div className="font-medium">{test.name}</div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {test.normalRange}
                   </div>
-
-                  {/* Values Input */}
-                  {status === "done" && test?.hasValues && (
-                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                      <h5 className="text-sm font-medium text-gray-700 mb-3">
-                        Enter Results:
-                      </h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {test.values?.map((valueKey) => (
-                          <div key={valueKey}>
-                            <label className="block text-xs text-gray-600 mb-1">
-                              {valueKey}
-                            </label>
-                            <input
-                              type="text"
-                              placeholder={`Enter ${valueKey}`}
-                              value={
-                                investigationValues[testId]?.[valueKey] || ""
-                              }
-                              onChange={(e) =>
-                                handleInvestigationValueChange(
-                                  testId,
-                                  valueKey,
-                                  e.target.value,
-                                )
-                              }
-                              className="w-full p-2 border border-gray-300 rounded text-sm"
-                            />
-                          </div>
-                        ))}
-                      </div>
+                  {isRecommended && (
+                    <div className="text-xs text-orange-600 mt-1 font-medium">
+                      ✓ Will be prescribed
                     </div>
                   )}
-
-                  {/* Instructions for 'todo' investigations */}
-                  {status === "todo" && (
-                    <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                      <p className="text-sm text-yellow-800">
-                        📋 This investigation will be prescribed to the patient
-                      </p>
-                    </div>
-                  )}
-                </div>
+                </button>
               );
             })}
+          </div>
+        </div>
+
+        {/* Summary of recommended tests */}
+        {Object.values(investigationStatus).some(status => status === "todo") && (
+          <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Tests to Prescribe (प्रिस्क्राइब करने वाली जांच)
+            </h3>
+            <div className="space-y-2">
+              {Object.entries(investigationStatus)
+                .filter(([_, status]) => status === "todo")
+                .map(([testId, _]) => {
+                  const test = investigationOptions.find((t) => t.id === testId);
+                  return (
+                    <div key={testId} className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded">
+                      <span className="font-medium text-orange-900">{test?.name}</span>
+                      <span className="text-xs text-orange-700 bg-orange-200 px-2 py-1 rounded">
+                        To Prescribe
+                      </span>
+                    </div>
+                  );
+                })}
+            </div>
           </div>
         )}
 
         <div className="text-center pt-6">
-          <Button
-            onClick={() => setWorkflowPhase("diagnosis")}
-            className="px-8"
-          >
-            Continue to Diagnosis
-            <ChevronRight className="w-4 h-4 ml-2" />
-          </Button>
+          <div className="flex justify-center space-x-4">
+            <Button
+              variant="outline"
+              onClick={() => setInvestigationStep(1)}
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Back to Step 1
+            </Button>
+            <Button
+              onClick={() => setWorkflowPhase("diagnosis")}
+              className="px-8"
+            >
+              Continue to Diagnosis
+              <ChevronRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
         </div>
       </div>
     );

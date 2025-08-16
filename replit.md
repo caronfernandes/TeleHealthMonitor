@@ -60,6 +60,10 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes (August 2025)
 - **Workflow Restructuring**: Separated symptom selection from detailed assessment into distinct steps
 - **Enhanced Symptom Details**: Added comprehensive assessment forms for primary and associated symptoms
+- **Associated Symptoms Enhancement**: Added detailed multi-step workflows for rash, cough, and headache symptoms with specific questions for type, location, duration, and severity
+- **Multi-level Symptom Assessment**: Complete associated symptom specification workflow with dedicated phase for detailed assessment of each selected associated symptom (rash, cough, headache, joint pain, burning micturition, vomiting, abdominal pain, sore throat, weight loss, night sweats)
+- **Progressive Symptom Evaluation**: Each associated symptom now has its own detailed questioning sequence including onset, character, severity, location, and other relevant clinical parameters
+- **Examination Interface Optimization**: Physical examination now shows only 5 items initially with expandable "Show more" button for better user experience
 - **Streamlined Red Flags**: Integrated red flag detection directly into physical examination interface
 - **Investigation Filtering**: Shows top 5 relevant tests with expandable "Show more" option for streamlined workflow
 - **Back Navigation**: Added navigation buttons throughout all workflow phases for better user control
@@ -68,3 +72,4 @@ Preferred communication style: Simple, everyday language.
 - **Auto-Navigation**: Automatic step progression with 500ms delays for smooth user experience
 - **Red Flag Integration**: Real-time clinical alerts during examination with visual indicators
 - **Complete Workflow**: All phases implemented - symptoms, examination, investigations, diagnosis, prescription
+- **Migration Completion**: Successfully migrated from Replit Agent to standard Replit environment with TypeScript fixes and improved type safety

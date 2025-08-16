@@ -46,6 +46,15 @@ interface WorkflowStep {
   showMore?: boolean;
 }
 
+interface MedicineItem {
+  id: number;
+  medicine: string;
+  strength: string;
+  frequency: string;
+  duration: string;
+  instructions: string;
+}
+
 const SYMPTOM_WORKFLOW: Record<string, WorkflowStep[]> = {
   fever: [
     {
@@ -109,9 +118,16 @@ const SYMPTOM_WORKFLOW: Record<string, WorkflowStep[]> = {
       id: "fever_associated",
       question: "What other symptoms are present with fever?",
       options: [
-        { id: "rash", label: "Rash on body", next: "rash_type" },
-        { id: "cough", label: "Cough", next: "cough_type" },
-        { id: "headache", label: "Headache", next: "examination" },
+        { id: "rash", label: "Rash on body" },
+        { id: "cough", label: "Cough" },
+        { id: "headache", label: "Headache" },
+        { id: "joint_pain", label: "Joint pain" },
+        { id: "burning_micturition", label: "Burning micturition" },
+        { id: "vomiting", label: "Vomiting" },
+        { id: "abdominal_pain", label: "Abdominal pain" },
+        { id: "sore_throat", label: "Sore throat" },
+        { id: "weight_loss", label: "Weight loss" },
+        { id: "night_sweats", label: "Night sweats" },
       ],
       type: "multiple",
       category: "associated",
@@ -126,41 +142,270 @@ const ASSOCIATED_SYMPTOMS: Record<string, WorkflowStep[]> = {
       id: "rash_type",
       question: "What type of rash is it?",
       options: [
-        {
-          id: "maculopapular",
-          label: "Flat red spots (Maculopapular)",
-          next: "examination",
-        },
-        {
-          id: "petechial",
-          label: "Small red dots (Petechial)",
-          next: "examination",
-        },
-        {
-          id: "vesicular",
-          label: "Small blisters (Vesicular)",
-          next: "examination",
-        },
+        { id: "maculopapular", label: "Maculopapular (flat red spots)" },
+        { id: "petechial", label: "Petechial (small red dots)" },
+        { id: "vesicular", label: "Vesicular (small blisters)" },
+        { id: "urticarial", label: "Urticarial (hives/wheals)" },
       ],
       type: "single",
-      category: "rash_details",
+      category: "rash_type",
+    },
+    {
+      id: "rash_distribution",
+      question: "Where is the rash distributed?",
+      options: [
+        { id: "localized", label: "Localized to one area" },
+        { id: "generalized", label: "All over body" },
+        { id: "face", label: "Face and neck" },
+        { id: "trunk", label: "Chest and back" },
+        { id: "extremities", label: "Arms and legs" },
+      ],
+      type: "multiple",
+      category: "rash_distribution",
     },
   ],
   cough: [
     {
+      id: "cough_onset",
+      question: "How long has the cough been present?",
+      options: [
+        { id: "acute", label: "Acute (less than 3 weeks)" },
+        { id: "subacute", label: "Subacute (3-8 weeks)" },
+        { id: "chronic", label: "Chronic (more than 8 weeks)" },
+      ],
+      type: "single",
+      category: "cough_onset",
+    },
+    {
       id: "cough_type",
       question: "What type of cough?",
       options: [
-        { id: "dry", label: "Dry cough (no phlegm)", next: "examination" },
-        {
-          id: "productive",
-          label: "Productive cough (with phlegm)",
-          next: "examination",
-        },
-        { id: "blood", label: "Cough with blood", next: "examination" },
+        { id: "dry", label: "Dry cough" },
+        { id: "productive", label: "Productive (with sputum)" },
       ],
       type: "single",
-      category: "cough_details",
+      category: "cough_type",
+    },
+    {
+      id: "cough_sputum_color",
+      question: "If productive, what color is the sputum?",
+      options: [
+        { id: "white", label: "White/Clear" },
+        { id: "yellow", label: "Yellow" },
+        { id: "green", label: "Green" },
+        { id: "brown", label: "Brown" },
+      ],
+      type: "single",
+      category: "sputum_color",
+    },
+    {
+      id: "cough_timing",
+      question: "When is the cough worse?",
+      options: [
+        { id: "daytime", label: "Daytime predominant" },
+        { id: "nighttime", label: "Nighttime predominant" },
+        { id: "continuous", label: "Continuous" },
+      ],
+      type: "single",
+      category: "cough_timing",
+    },
+  ],
+  headache: [
+    {
+      id: "headache_onset",
+      question: "How long has the headache been present?",
+      options: [
+        { id: "hours", label: "Few hours" },
+        { id: "days", label: "Few days" },
+        { id: "weeks", label: "Few weeks" },
+        { id: "chronic", label: "Chronic (months/years)" },
+      ],
+      type: "single",
+      category: "headache_onset",
+    },
+    {
+      id: "headache_character",
+      question: "What is the character of headache?",
+      options: [
+        { id: "throbbing", label: "Throbbing/Pulsating" },
+        { id: "pressing", label: "Pressing/Tight band" },
+        { id: "sharp", label: "Sharp/Stabbing" },
+        { id: "dull", label: "Dull ache" },
+      ],
+      type: "single",
+      category: "headache_character",
+    },
+  ],
+  joint_pain: [
+    {
+      id: "joint_pattern",
+      question: "What is the pattern of joint involvement?",
+      options: [
+        { id: "monoarticular", label: "Monoarticular (single joint)" },
+        { id: "polyarticular", label: "Polyarticular (multiple joints)" },
+        { id: "migratory", label: "Migratory (moves between joints)" },
+      ],
+      type: "single",
+      category: "joint_pattern",
+    },
+    {
+      id: "joint_location",
+      question: "Which joints are affected?",
+      options: [
+        { id: "small_joints", label: "Small joints (fingers, toes)" },
+        { id: "large_joints", label: "Large joints (knee, hip, shoulder)" },
+        { id: "spine", label: "Spine/Back" },
+        { id: "mixed", label: "Both small and large joints" },
+      ],
+      type: "multiple",
+      category: "joint_location",
+    },
+  ],
+  burning_micturition: [
+    {
+      id: "urinary_urgency",
+      question: "Is there associated urinary urgency?",
+      options: [
+        { id: "yes", label: "Yes, urgent need to urinate" },
+        { id: "no", label: "No urgency" },
+      ],
+      type: "single",
+      category: "urinary_symptoms",
+    },
+    {
+      id: "flank_pain",
+      question: "Is there any flank pain?",
+      options: [
+        { id: "yes", label: "Yes, pain in back/side" },
+        { id: "no", label: "No flank pain" },
+      ],
+      type: "single",
+      category: "flank_pain",
+    },
+  ],
+  vomiting: [
+    {
+      id: "vomiting_frequency",
+      question: "How frequent is the vomiting?",
+      options: [
+        { id: "occasional", label: "Occasional (1-2 times)" },
+        { id: "frequent", label: "Frequent (3-5 times)" },
+        { id: "persistent", label: "Persistent (>5 times)" },
+      ],
+      type: "single",
+      category: "vomiting_frequency",
+    },
+    {
+      id: "vomiting_content",
+      question: "What is the nature of vomitus?",
+      options: [
+        { id: "food", label: "Food particles" },
+        { id: "bile", label: "Bile (yellow-green)" },
+        { id: "blood", label: "Blood stained" },
+        { id: "watery", label: "Clear/Watery" },
+      ],
+      type: "single",
+      category: "vomiting_content",
+    },
+  ],
+  abdominal_pain: [
+    {
+      id: "pain_location",
+      question: "Where is the abdominal pain located?",
+      options: [
+        { id: "localized", label: "Localized to specific area" },
+        { id: "diffuse", label: "Diffuse (all over abdomen)" },
+        { id: "epigastric", label: "Upper abdomen (epigastric)" },
+        { id: "periumbilical", label: "Around navel" },
+        { id: "lower", label: "Lower abdomen" },
+      ],
+      type: "single",
+      category: "pain_location",
+    },
+    {
+      id: "pain_character",
+      question: "What is the character of pain?",
+      options: [
+        { id: "cramping", label: "Cramping/Colicky" },
+        { id: "burning", label: "Burning" },
+        { id: "sharp", label: "Sharp/Stabbing" },
+        { id: "dull", label: "Dull ache" },
+      ],
+      type: "single",
+      category: "pain_character",
+    },
+  ],
+  sore_throat: [
+    {
+      id: "throat_severity",
+      question: "How severe is the sore throat?",
+      options: [
+        { id: "mild", label: "Mild discomfort" },
+        { id: "moderate", label: "Moderate pain" },
+        { id: "severe", label: "Severe, difficulty swallowing" },
+      ],
+      type: "single",
+      category: "throat_severity",
+    },
+    {
+      id: "throat_appearance",
+      question: "Any visible changes in throat?",
+      options: [
+        { id: "red", label: "Red/Inflamed" },
+        { id: "white_patches", label: "White patches/Exudate" },
+        { id: "ulcers", label: "Ulcers/Sores" },
+        { id: "normal", label: "Looks normal" },
+      ],
+      type: "multiple",
+      category: "throat_appearance",
+    },
+  ],
+  weight_loss: [
+    {
+      id: "weight_amount",
+      question: "How much weight loss?",
+      options: [
+        { id: "mild", label: "Mild (2-5 kg)" },
+        { id: "moderate", label: "Moderate (5-10 kg)" },
+        { id: "severe", label: "Severe (>10 kg)" },
+      ],
+      type: "single",
+      category: "weight_amount",
+    },
+    {
+      id: "weight_duration",
+      question: "Over what time period?",
+      options: [
+        { id: "weeks", label: "Few weeks" },
+        { id: "months", label: "Few months" },
+        { id: "gradual", label: "Gradual over long time" },
+      ],
+      type: "single",
+      category: "weight_duration",
+    },
+  ],
+  night_sweats: [
+    {
+      id: "sweats_severity",
+      question: "How severe are the night sweats?",
+      options: [
+        { id: "mild", label: "Mild dampness" },
+        { id: "moderate", label: "Moderate, need to change clothes" },
+        { id: "severe", label: "Severe, soak through sheets" },
+      ],
+      type: "single",
+      category: "sweats_severity",
+    },
+    {
+      id: "sweats_frequency",
+      question: "How often do night sweats occur?",
+      options: [
+        { id: "occasional", label: "Occasionally" },
+        { id: "frequent", label: "Most nights" },
+        { id: "nightly", label: "Every night" },
+      ],
+      type: "single",
+      category: "sweats_frequency",
     },
   ],
 };
@@ -172,6 +417,7 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
   const [workflowPhase, setWorkflowPhase] = useState<
     | "symptom_selection"
     | "symptom_details"
+    | "associated_symptom_details"
     | "examination"
     | "investigation"
     | "diagnosis"
@@ -196,10 +442,14 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
   const [selectedDiagnoses, setSelectedDiagnoses] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
-  const [prescriptionItems, setPrescriptionItems] = useState<any[]>([]);
-  const [editingItem, setEditingItem] = useState<any>(null);
+  const [prescriptionItems, setPrescriptionItems] = useState<MedicineItem[]>([]);
+  const [editingItem, setEditingItem] = useState<MedicineItem | null>(null);
   const [showMedicineModal, setShowMedicineModal] = useState(false);
   const [showMoreInvestigations, setShowMoreInvestigations] = useState(false);
+  const [showMoreExaminations, setShowMoreExaminations] = useState(false);
+  const [selectedAssociatedSymptoms, setSelectedAssociatedSymptoms] = useState<string[]>([]);
+  const [currentAssociatedSymptom, setCurrentAssociatedSymptom] = useState<string>("");
+  const [currentAssociatedStepIndex, setCurrentAssociatedStepIndex] = useState(0);
 
   const handleSymptomSelect = (symptom: string) => {
     setCurrentSymptom(symptom);
@@ -261,15 +511,15 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
     // Check if any associated symptoms were selected
     const selectedAssociated = answers["fever_associated"] || [];
     if (selectedAssociated.length > 0) {
-      // Navigate to first associated symptom detail
-      const firstAssociated = selectedAssociated[0];
-      if (ASSOCIATED_SYMPTOMS[firstAssociated]) {
-        setCurrentStepId(ASSOCIATED_SYMPTOMS[firstAssociated][0].id);
-        return;
-      }
+      // Store selected associated symptoms and start detailed assessment
+      setSelectedAssociatedSymptoms(selectedAssociated);
+      setCurrentAssociatedSymptom(selectedAssociated[0]);
+      setCurrentAssociatedStepIndex(0);
+      setWorkflowPhase("associated_symptom_details");
+      return;
     }
 
-    // If no associated symptoms or no details needed, go to examination
+    // If no associated symptoms selected, go directly to examination
     setTimeout(() => setWorkflowPhase("examination"), 300);
   };
 
@@ -644,7 +894,8 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
         </h3>
 
         <div className="grid gap-4">
-          {examinationItems.map((exam) => {
+          {/* Show first 5 examination items */}
+          {examinationItems.slice(0, showMoreExaminations ? undefined : 5).map((exam) => {
             const hasRedFlag = redFlags.some((flag) => flag.source === exam.id);
 
             return (
@@ -746,6 +997,31 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
               </div>
             );
           })}
+          
+          {/* Show More/Less Toggle for Examinations */}
+          {examinationItems.length > 5 && (
+            <div className="text-center mt-4">
+              {!showMoreExaminations ? (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowMoreExaminations(true)}
+                  className="text-gray-600 border-gray-300"
+                >
+                  <ChevronDown className="w-4 h-4 mr-2" />
+                  Show more examinations ({examinationItems.length - 5} more)
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowMoreExaminations(false)}
+                  className="text-gray-600 border-gray-300"
+                >
+                  <ChevronUp className="w-4 h-4 mr-2" />
+                  Show less examinations
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -1229,12 +1505,12 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
       );
     };
 
-    const handleEditItem = (item: any) => {
+    const handleEditItem = (item: MedicineItem) => {
       setEditingItem({ ...item });
       setShowMedicineModal(true);
     };
 
-    const handleDeleteItem = (itemId: string) => {
+    const handleDeleteItem = (itemId: number) => {
       setPrescriptionItems((prev) => prev.filter((item) => item.id !== itemId));
     };
 
@@ -1420,7 +1696,7 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
                     type="text"
                     value={editingItem?.medicine || ""}
                     onChange={(e) =>
-                      setEditingItem((prev) =>
+                      setEditingItem((prev: MedicineItem | null) =>
                         prev ? { ...prev, medicine: e.target.value } : null,
                       )
                     }
@@ -1437,7 +1713,7 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
                     type="text"
                     value={editingItem?.strength || ""}
                     onChange={(e) =>
-                      setEditingItem((prev) =>
+                      setEditingItem((prev: MedicineItem | null) =>
                         prev ? { ...prev, strength: e.target.value } : null,
                       )
                     }
@@ -1453,7 +1729,7 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
                   <select
                     value={editingItem?.frequency || ""}
                     onChange={(e) =>
-                      setEditingItem((prev) =>
+                      setEditingItem((prev: MedicineItem | null) =>
                         prev ? { ...prev, frequency: e.target.value } : null,
                       )
                     }
@@ -1476,7 +1752,7 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
                     type="text"
                     value={editingItem?.duration || ""}
                     onChange={(e) =>
-                      setEditingItem((prev) =>
+                      setEditingItem((prev: MedicineItem | null) =>
                         prev ? { ...prev, duration: e.target.value } : null,
                       )
                     }
@@ -1492,7 +1768,7 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
                   <select
                     value={editingItem?.instructions || ""}
                     onChange={(e) =>
-                      setEditingItem((prev) =>
+                      setEditingItem((prev: MedicineItem | null) =>
                         prev ? { ...prev, instructions: e.target.value } : null,
                       )
                     }
@@ -1537,12 +1813,200 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
       </div>
     );
 
+    const renderAssociatedSymptomDetails = () => {
+      if (selectedAssociatedSymptoms.length === 0) {
+        setWorkflowPhase("examination");
+        return null;
+      }
+
+      const currentSymptomName = currentAssociatedSymptom;
+      const symptomSteps = ASSOCIATED_SYMPTOMS[currentSymptomName] || [];
+      const currentStep = symptomSteps[currentAssociatedStepIndex];
+
+      if (!currentStep) {
+        // Move to next associated symptom or examination
+        const nextSymptomIndex = selectedAssociatedSymptoms.findIndex(s => s === currentSymptomName) + 1;
+        if (nextSymptomIndex < selectedAssociatedSymptoms.length) {
+          setCurrentAssociatedSymptom(selectedAssociatedSymptoms[nextSymptomIndex]);
+          setCurrentAssociatedStepIndex(0);
+          return null;
+        } else {
+          setWorkflowPhase("examination");
+          return null;
+        }
+      }
+
+      const handleAssociatedAnswer = (answerId: string) => {
+        setAnswers(prev => ({
+          ...prev,
+          [currentStep.id]: [answerId]
+        }));
+
+        // Auto-advance to next step
+        setTimeout(() => {
+          const nextStepIndex = currentAssociatedStepIndex + 1;
+          if (nextStepIndex < symptomSteps.length) {
+            setCurrentAssociatedStepIndex(nextStepIndex);
+          } else {
+            // Move to next associated symptom
+            const nextSymptomIndex = selectedAssociatedSymptoms.findIndex(s => s === currentSymptomName) + 1;
+            if (nextSymptomIndex < selectedAssociatedSymptoms.length) {
+              setCurrentAssociatedSymptom(selectedAssociatedSymptoms[nextSymptomIndex]);
+              setCurrentAssociatedStepIndex(0);
+            } else {
+              setWorkflowPhase("examination");
+            }
+          }
+        }, 500);
+      };
+
+      const handleAssociatedMultipleToggle = (answerId: string) => {
+        const currentAnswers = answers[currentStep.id] || [];
+        const isSelected = currentAnswers.includes(answerId);
+        
+        setAnswers(prev => ({
+          ...prev,
+          [currentStep.id]: isSelected 
+            ? currentAnswers.filter(id => id !== answerId)
+            : [...currentAnswers, answerId]
+        }));
+      };
+
+      const handleContinueFromAssociated = () => {
+        const nextStepIndex = currentAssociatedStepIndex + 1;
+        if (nextStepIndex < symptomSteps.length) {
+          setCurrentAssociatedStepIndex(nextStepIndex);
+        } else {
+          // Move to next associated symptom
+          const nextSymptomIndex = selectedAssociatedSymptoms.findIndex(s => s === currentSymptomName) + 1;
+          if (nextSymptomIndex < selectedAssociatedSymptoms.length) {
+            setCurrentAssociatedSymptom(selectedAssociatedSymptoms[nextSymptomIndex]);
+            setCurrentAssociatedStepIndex(0);
+          } else {
+            setWorkflowPhase("examination");
+          }
+        }
+      };
+
+      const isMultiple = currentStep.type === "multiple";
+      const currentAnswers = answers[currentStep.id] || [];
+      const currentSymptomIndex = selectedAssociatedSymptoms.findIndex(s => s === currentSymptomName);
+
+      return (
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Progress indicator */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+              <span>Associated Symptom Details</span>
+              <span>
+                {currentSymptomIndex + 1} of {selectedAssociatedSymptoms.length} symptoms
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                style={{
+                  width: `${((currentSymptomIndex + (currentAssociatedStepIndex / symptomSteps.length)) / selectedAssociatedSymptoms.length) * 100}%`,
+                }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Back Navigation */}
+          <div className="flex items-center mb-6">
+            <Button
+              variant="outline"
+              onClick={() => setWorkflowPhase("symptom_details")}
+              className="mr-4"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Back to Main Symptoms
+            </Button>
+          </div>
+
+          {/* Current symptom context */}
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              {currentSymptomName.replace('_', ' ').toUpperCase()} Details
+            </h2>
+            <p className="text-gray-600">
+              Please provide more specific information about this symptom
+            </p>
+          </div>
+
+          {/* Question Card */}
+          <Card className="border-2 border-blue-200 shadow-lg">
+            <CardHeader className="bg-blue-50">
+              <CardTitle className="text-xl text-center text-blue-800">
+                {currentStep.question}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid gap-3 max-w-2xl mx-auto">
+                {currentStep.options.map((option) => {
+                  const isSelected = isMultiple 
+                    ? currentAnswers.includes(option.id)
+                    : currentAnswers[0] === option.id;
+
+                  return (
+                    <Card
+                      key={option.id}
+                      className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+                        isSelected
+                          ? "border-2 border-blue-500 bg-blue-50 shadow-md"
+                          : "border border-gray-200 hover:border-blue-300"
+                      }`}
+                      onClick={() => 
+                        isMultiple 
+                          ? handleAssociatedMultipleToggle(option.id)
+                          : handleAssociatedAnswer(option.id)
+                      }
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center space-x-3">
+                          <div
+                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                              isSelected
+                                ? "border-blue-500 bg-blue-500"
+                                : "border-gray-300"
+                            }`}
+                          >
+                            {isSelected && (
+                              <div className="w-2 h-2 bg-white rounded-full"></div>
+                            )}
+                          </div>
+                          <span className="font-medium text-gray-800">
+                            {option.label}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {isMultiple && currentAnswers.length > 0 && (
+                <div className="text-center pt-6">
+                  <Button onClick={handleContinueFromAssociated} className="px-8">
+                    Continue
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      );
+    };
+
     const renderCurrentPhase = () => {
       switch (workflowPhase) {
         case "symptom_selection":
           return renderSymptomSelection();
         case "symptom_details":
           return renderQuestionStep();
+        case "associated_symptom_details":
+          return renderAssociatedSymptomDetails();
         case "examination":
           return renderExamination();
         case "investigation":

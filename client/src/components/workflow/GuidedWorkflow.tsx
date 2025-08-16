@@ -1641,4 +1641,3 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
       </div>
     );
   };
-}

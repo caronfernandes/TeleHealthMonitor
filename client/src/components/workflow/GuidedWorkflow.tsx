@@ -628,6 +628,18 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
 
     return (
       <div className="max-w-3xl mx-auto space-y-6">
+        {/* Back Navigation */}
+        <div className="flex items-center mb-6">
+          <Button
+            variant="outline"
+            onClick={() => setWorkflowPhase("symptom_selection")}
+            className="mr-4"
+          >
+            <ChevronLeft className="w-4 h-4 mr-2" />
+            Back to Chief Complaint
+          </Button>
+        </div>
+
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <Badge variant="secondary" className="px-3 py-1">
@@ -815,6 +827,25 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
 
   const renderExamination = () => (
     <div className="max-w-6xl mx-auto space-y-6">
+      {/* Back Navigation */}
+      <div className="flex items-center mb-6">
+        <Button
+          variant="outline"
+          onClick={() => {
+            // Go back to associated symptoms details if they exist, otherwise symptom details
+            if (selectedAssociatedSymptoms.length > 0) {
+              setWorkflowPhase("associated_symptom_details");
+            } else {
+              setWorkflowPhase("symptom_details");
+            }
+          }}
+          className="mr-4"
+        >
+          <ChevronLeft className="w-4 h-4 mr-2" />
+          Back to Symptoms
+        </Button>
+      </div>
+
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center">
           <Stethoscope className="h-6 w-6 text-blue-600 mr-3" />

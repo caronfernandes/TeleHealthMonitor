@@ -73,3 +73,5 @@ Preferred communication style: Simple, everyday language.
 - **Red Flag Integration**: Real-time clinical alerts during examination with visual indicators
 - **Complete Workflow**: All phases implemented - symptoms, examination, investigations, diagnosis, prescription
 - **Migration Completion**: Successfully migrated from Replit Agent to standard Replit environment with TypeScript fixes and improved type safety
+- **Investigation Workflow Enhancement**: Split investigations into 2 distinct steps - (1) Record completed tests with value entry, (2) Recommend additional tests to prescribe
+- **Back Navigation Enhancement**: Added comprehensive back button navigation to all workflow phases with smart routing between symptom assessment steps

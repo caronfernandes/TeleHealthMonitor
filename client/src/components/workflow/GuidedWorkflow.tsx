@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronRight, Thermometer, Stethoscope, Clock, ChevronDown, ChevronUp, AlertTriangle, FileText, Pill, Plus, Edit, Trash2 } from 'lucide-react';
+import { ChevronRight, Thermometer, Stethoscope, Clock, ChevronDown, ChevronUp, AlertTriangle, FileText, Pill, Plus, Edit, Trash2, ChevronLeft, X } from 'lucide-react';
 import { examinationItems, investigationOptions, getRedFlags } from '@/lib/medical-data';
 import { useQuery } from '@tanstack/react-query';
 
@@ -123,6 +123,7 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
   const [prescriptionItems, setPrescriptionItems] = useState<any[]>([]);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [showMedicineModal, setShowMedicineModal] = useState(false);
+  const [showMoreInvestigations, setShowMoreInvestigations] = useState(false);
 
   const handleSymptomSelect = (symptom: string) => {
     setCurrentSymptom(symptom);
@@ -620,40 +621,105 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
     }));
   };
 
-  const renderInvestigation = () => (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Investigations (जांच करवाएं)
-        </h2>
-        <p className="text-gray-600">Select and configure recommended tests</p>
-      </div>
-      
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-        <h3 className="font-medium text-blue-800 mb-3">
-          Recommended for Fever (बुखार के लिए सुझाई गई जांच)
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {investigationOptions.map((test) => (
-            <button
-              key={test.id}
-              onClick={() => handleInvestigationToggle(test.id)}
-              className={`p-3 rounded border text-sm text-left transition-colors ${
-                investigations.includes(test.id) 
-                  ? 'bg-blue-600 text-white border-blue-600' 
-                  : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
-              }`}
-            >
-              <div className="font-medium">{test.name}</div>
-              {test.hasValues && investigations.includes(test.id) && (
-                <div className="text-xs mt-1 opacity-75">
-                  Click to configure values
-                </div>
-              )}
-            </button>
-          ))}
+  const renderInvestigation = () => {
+    const relevantTests = investigationOptions.slice(0, 5);
+    const otherTests = investigationOptions.slice(5);
+
+    return (
+      <div className="max-w-6xl mx-auto space-y-6">
+        {/* Back Navigation */}
+        <div className="flex items-center mb-4">
+          <Button 
+            variant="outline" 
+            onClick={() => setWorkflowPhase('examination')}
+            className="mr-4"
+          >
+            <ChevronLeft className="w-4 h-4 mr-2" />
+            Back to Examination
+          </Button>
         </div>
-      </div>
+
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Investigations (जांच करवाएं)
+          </h2>
+          <p className="text-gray-600">Select and configure recommended tests</p>
+        </div>
+        
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <h3 className="font-medium text-blue-800 mb-3">
+            Recommended for {currentSymptom || 'Fever'} (बुखार के लिए सुझाई गई जांच)
+          </h3>
+          
+          {/* Primary 5 investigations */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+            {relevantTests.map((test) => (
+              <button
+                key={test.id}
+                onClick={() => handleInvestigationToggle(test.id)}
+                className={`p-3 rounded border text-sm text-left transition-colors ${
+                  investigations.includes(test.id) 
+                    ? 'bg-blue-600 text-white border-blue-600' 
+                    : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
+                }`}
+              >
+                <div className="font-medium">{test.name}</div>
+                {test.hasValues && investigations.includes(test.id) && (
+                  <div className="text-xs mt-1 opacity-75">
+                    Click to configure values
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Show More/Less Toggle */}
+          {otherTests.length > 0 && (
+            <div className="text-center">
+              {!showMoreInvestigations ? (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowMoreInvestigations(true)}
+                  className="text-blue-600 border-blue-300"
+                >
+                  <ChevronDown className="w-4 h-4 mr-2" />
+                  Show more investigations ({otherTests.length})
+                </Button>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                    {otherTests.map((test) => (
+                      <button
+                        key={test.id}
+                        onClick={() => handleInvestigationToggle(test.id)}
+                        className={`p-3 rounded border text-sm text-left transition-colors ${
+                          investigations.includes(test.id) 
+                            ? 'bg-blue-600 text-white border-blue-600' 
+                            : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
+                        }`}
+                      >
+                        <div className="font-medium">{test.name}</div>
+                        {test.hasValues && investigations.includes(test.id) && (
+                          <div className="text-xs mt-1 opacity-75">
+                            Click to configure values
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowMoreInvestigations(false)}
+                    className="text-blue-600 border-blue-300"
+                  >
+                    <ChevronUp className="w-4 h-4 mr-2" />
+                    Show less
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
 
       {/* Selected Investigations Configuration */}
       {investigations.length > 0 && (
@@ -782,6 +848,18 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
 
     return (
       <div className="max-w-6xl mx-auto space-y-6">
+        {/* Back Navigation */}
+        <div className="flex items-center mb-4">
+          <Button 
+            variant="outline" 
+            onClick={() => setWorkflowPhase('investigation')}
+            className="mr-4"
+          >
+            <ChevronLeft className="w-4 h-4 mr-2" />
+            Back to Investigations
+          </Button>
+        </div>
+
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center">
             <FileText className="h-6 w-6 text-green-600 mr-3" />
@@ -895,6 +973,18 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
 
   const renderPrescription = () => (
     <div className="max-w-6xl mx-auto space-y-6">
+      {/* Back Navigation */}
+      <div className="flex items-center mb-4">
+        <Button 
+          variant="outline" 
+          onClick={() => setWorkflowPhase('diagnosis')}
+          className="mr-4"
+        >
+          <ChevronLeft className="w-4 h-4 mr-2" />
+          Back to Diagnosis
+        </Button>
+      </div>
+
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center">
           <Pill className="h-6 w-6 text-purple-600 mr-3" />
@@ -988,6 +1078,113 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
           </div>
         </div>
       </div>
+
+      {/* Medicine Edit Modal */}
+      {showMedicineModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Edit Medicine</h3>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowMedicineModal(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Medicine Name</label>
+                <input
+                  type="text"
+                  value={editingItem?.medicine || ''}
+                  onChange={(e) => setEditingItem(prev => prev ? {...prev, medicine: e.target.value} : null)}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  placeholder="e.g., Paracetamol"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Strength</label>
+                <input
+                  type="text"
+                  value={editingItem?.strength || ''}
+                  onChange={(e) => setEditingItem(prev => prev ? {...prev, strength: e.target.value} : null)}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  placeholder="e.g., 500mg"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Frequency</label>
+                <select
+                  value={editingItem?.frequency || ''}
+                  onChange={(e) => setEditingItem(prev => prev ? {...prev, frequency: e.target.value} : null)}
+                  className="w-full p-2 border border-gray-300 rounded"
+                >
+                  <option value="">Select frequency</option>
+                  <option value="OD">OD (Once daily)</option>
+                  <option value="BD">BD (Twice daily)</option>
+                  <option value="TID">TID (Three times daily)</option>
+                  <option value="QID">QID (Four times daily)</option>
+                  <option value="SOS">SOS (When needed)</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
+                <input
+                  type="text"
+                  value={editingItem?.duration || ''}
+                  onChange={(e) => setEditingItem(prev => prev ? {...prev, duration: e.target.value} : null)}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  placeholder="e.g., 5 Days"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Instructions</label>
+                <select
+                  value={editingItem?.instructions || ''}
+                  onChange={(e) => setEditingItem(prev => prev ? {...prev, instructions: e.target.value} : null)}
+                  className="w-full p-2 border border-gray-300 rounded"
+                >
+                  <option value="">Select instructions</option>
+                  <option value="Before food">Before food</option>
+                  <option value="After food">After food</option>
+                  <option value="With food">With food</option>
+                  <option value="Empty stomach">Empty stomach</option>
+                  <option value="At bedtime">At bedtime</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowMedicineModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (editingItem) {
+                    setPrescriptionItems(prev => 
+                      prev.map(item => item.id === editingItem.id ? editingItem : item)
+                    );
+                    setShowMedicineModal(false);
+                    setEditingItem(null);
+                  }
+                }}
+              >
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 

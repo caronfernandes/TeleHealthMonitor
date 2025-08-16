@@ -1771,40 +1771,8 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
           {/* Templates Panel */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Quick Add Medicine
+              Prescription Templates
             </h3>
-            
-            {/* Quick Add Form */}
-            <div className="space-y-3 mb-6 p-4 bg-blue-50 rounded-lg border">
-              <h4 className="font-medium text-blue-900 mb-3">Add New Medicine</h4>
-              <input
-                type="text"
-                placeholder="Medicine name (e.g., Paracetamol 500mg)"
-                className="w-full p-2 border border-gray-300 rounded text-sm"
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    const target = e.target as HTMLInputElement;
-                    if (target.value.trim()) {
-                      const newMedicine = {
-                        id: Date.now().toString(),
-                        medicine: target.value.trim(),
-                        strength: '500mg',
-                        frequency: 'BD',
-                        duration: '5 Days',
-                        instructions: 'After food'
-                      };
-                      setPrescriptionItems(prev => [...prev, newMedicine]);
-                      target.value = '';
-                    }
-                  }
-                }}
-              />
-              <p className="text-xs text-blue-700">Press Enter to add with default settings (BD, 5 days, after food)</p>
-            </div>
-            
-            <h4 className="text-md font-medium text-gray-900 mb-4">
-              Or Select Template
-            </h4>
 
             <div className="space-y-3">
               {[
@@ -1849,7 +1817,7 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
 
           {/* Prescription Editor */}
           <div className="lg:col-span-2 bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
                 Current Prescription
               </h3>
@@ -1859,6 +1827,34 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
                   Add Detailed
                 </Button>
               </div>
+            </div>
+            
+            {/* Quick Add Form */}
+            <div className="space-y-3 mb-6 p-4 bg-blue-50 rounded-lg border">
+              <h4 className="font-medium text-blue-900 mb-3">🚀 Quick Add Medicine</h4>
+              <input
+                type="text"
+                placeholder="Type medicine name and press Enter (e.g., Paracetamol 500mg)"
+                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    const target = e.target as HTMLInputElement;
+                    if (target.value.trim()) {
+                      const newMedicine = {
+                        id: Date.now().toString(),
+                        medicine: target.value.trim(),
+                        strength: '500mg',
+                        frequency: 'BD',
+                        duration: '5 Days',
+                        instructions: 'After food'
+                      };
+                      setPrescriptionItems(prev => [...prev, newMedicine]);
+                      target.value = '';
+                    }
+                  }
+                }}
+              />
+              <p className="text-xs text-blue-700">⚡ Default: BD (twice daily), 5 days, after food - Use "Add Detailed" for custom settings</p>
             </div>
 
             {/* Prescription Items */}

@@ -138,21 +138,45 @@ const ASSOCIATED_SYMPTOMS: Record<string, WorkflowStep[]> = {
         {
           id: "maculopapular",
           label: "Flat red spots (Maculopapular)",
-          next: "examination",
+          next: "rash_distribution",
         },
         {
           id: "petechial",
           label: "Small red dots (Petechial)",
-          next: "examination",
+          next: "rash_distribution",
         },
         {
           id: "vesicular",
           label: "Small blisters (Vesicular)",
-          next: "examination",
+          next: "rash_distribution",
         },
       ],
       type: "single",
       category: "rash_details",
+    },
+    {
+      id: "rash_distribution",
+      question: "Where is the rash located?",
+      options: [
+        { id: "face", label: "Face", next: "rash_duration" },
+        { id: "trunk", label: "Chest/Back", next: "rash_duration" },
+        { id: "extremities", label: "Arms/Legs", next: "rash_duration" },
+        { id: "generalized", label: "All over body", next: "rash_duration" },
+      ],
+      type: "multiple",
+      category: "rash_distribution",
+    },
+    {
+      id: "rash_duration",
+      question: "How long has the rash been present?",
+      options: [
+        { id: "hours", label: "Few hours", next: "examination" },
+        { id: "1-2_days", label: "1-2 days", next: "examination" },
+        { id: "3-7_days", label: "3-7 days", next: "examination" },
+        { id: "more_week", label: "More than a week", next: "examination" },
+      ],
+      type: "single",
+      category: "rash_duration",
     },
   ],
   cough: [
@@ -160,16 +184,88 @@ const ASSOCIATED_SYMPTOMS: Record<string, WorkflowStep[]> = {
       id: "cough_type",
       question: "What type of cough?",
       options: [
-        { id: "dry", label: "Dry cough (no phlegm)", next: "examination" },
+        { id: "dry", label: "Dry cough (no phlegm)", next: "cough_duration" },
         {
           id: "productive",
           label: "Productive cough (with phlegm)",
-          next: "examination",
+          next: "cough_sputum",
         },
-        { id: "blood", label: "Cough with blood", next: "examination" },
+        { id: "blood", label: "Cough with blood", next: "cough_duration" },
       ],
       type: "single",
       category: "cough_details",
+    },
+    {
+      id: "cough_sputum",
+      question: "What color is the phlegm/sputum?",
+      options: [
+        { id: "clear", label: "Clear/White", next: "cough_duration" },
+        { id: "yellow", label: "Yellow", next: "cough_duration" },
+        { id: "green", label: "Green", next: "cough_duration" },
+        { id: "blood_tinged", label: "Blood-tinged", next: "cough_duration" },
+      ],
+      type: "single",
+      category: "sputum_details",
+    },
+    {
+      id: "cough_duration",
+      question: "How long has the cough been present?",
+      options: [
+        { id: "acute", label: "Less than 3 weeks", next: "cough_timing" },
+        { id: "subacute", label: "3-8 weeks", next: "cough_timing" },
+        { id: "chronic", label: "More than 8 weeks", next: "cough_timing" },
+      ],
+      type: "single",
+      category: "cough_duration",
+    },
+    {
+      id: "cough_timing",
+      question: "When is the cough worse?",
+      options: [
+        { id: "morning", label: "Morning", next: "examination" },
+        { id: "night", label: "Night time", next: "examination" },
+        { id: "exercise", label: "During activity", next: "examination" },
+        { id: "constant", label: "All the time", next: "examination" },
+      ],
+      type: "single",
+      category: "cough_timing",
+    },
+  ],
+  headache: [
+    {
+      id: "headache_type",
+      question: "What type of headache?",
+      options: [
+        { id: "throbbing", label: "Throbbing/Pulsating", next: "headache_location" },
+        { id: "pressing", label: "Pressing/Tight band", next: "headache_location" },
+        { id: "sharp", label: "Sharp/Stabbing", next: "headache_location" },
+        { id: "dull", label: "Dull ache", next: "headache_location" },
+      ],
+      type: "single",
+      category: "headache_quality",
+    },
+    {
+      id: "headache_location",
+      question: "Where is the headache located?",
+      options: [
+        { id: "frontal", label: "Forehead", next: "headache_severity" },
+        { id: "temporal", label: "Temples", next: "headache_severity" },
+        { id: "occipital", label: "Back of head", next: "headache_severity" },
+        { id: "generalized", label: "All over head", next: "headache_severity" },
+      ],
+      type: "multiple",
+      category: "headache_location",
+    },
+    {
+      id: "headache_severity",
+      question: "How severe is the headache? (1-10 scale)",
+      options: [
+        { id: "mild", label: "Mild (1-3)", next: "examination" },
+        { id: "moderate", label: "Moderate (4-6)", next: "examination" },
+        { id: "severe", label: "Severe (7-10)", next: "examination" },
+      ],
+      type: "single",
+      category: "headache_severity",
     },
   ],
 };
@@ -209,6 +305,7 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
   const [editingItem, setEditingItem] = useState<MedicineItem | null>(null);
   const [showMedicineModal, setShowMedicineModal] = useState(false);
   const [showMoreInvestigations, setShowMoreInvestigations] = useState(false);
+  const [showMoreExaminations, setShowMoreExaminations] = useState(false);
 
   const handleSymptomSelect = (symptom: string) => {
     setCurrentSymptom(symptom);
@@ -653,7 +750,8 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
         </h3>
 
         <div className="grid gap-4">
-          {examinationItems.map((exam) => {
+          {/* Show first 5 examination items */}
+          {examinationItems.slice(0, showMoreExaminations ? undefined : 5).map((exam) => {
             const hasRedFlag = redFlags.some((flag) => flag.source === exam.id);
 
             return (
@@ -755,6 +853,31 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
               </div>
             );
           })}
+          
+          {/* Show More/Less Toggle for Examinations */}
+          {examinationItems.length > 5 && (
+            <div className="text-center mt-4">
+              {!showMoreExaminations ? (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowMoreExaminations(true)}
+                  className="text-gray-600 border-gray-300"
+                >
+                  <ChevronDown className="w-4 h-4 mr-2" />
+                  Show more examinations ({examinationItems.length - 5} more)
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowMoreExaminations(false)}
+                  className="text-gray-600 border-gray-300"
+                >
+                  <ChevronUp className="w-4 h-4 mr-2" />
+                  Show less examinations
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

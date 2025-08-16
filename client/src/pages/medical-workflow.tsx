@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { GuidedWorkflow } from "@/components/workflow/GuidedWorkflow";
 import type { Patient } from "@shared/schema";
 

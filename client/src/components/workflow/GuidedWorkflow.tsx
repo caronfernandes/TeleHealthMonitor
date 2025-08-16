@@ -1014,6 +1014,7 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
         </div>
       </div>
     );
+  };
 
     // Diagnosis data
     const diagnosisCategories = [

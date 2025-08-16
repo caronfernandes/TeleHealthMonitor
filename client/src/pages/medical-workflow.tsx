@@ -13,4 +13,5 @@ export default function MedicalWorkflow() {
   };
 
   return <GuidedWorkflow patientInfo={patientInfo} />;
+}flow patientInfo={patientInfo} />;
 }

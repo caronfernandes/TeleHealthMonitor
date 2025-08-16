@@ -75,3 +75,4 @@ Preferred communication style: Simple, everyday language.
 - **Migration Completion**: Successfully migrated from Replit Agent to standard Replit environment with TypeScript fixes and improved type safety
 - **Investigation Workflow Enhancement**: Split investigations into 2 distinct steps - (1) Record completed tests with value entry, (2) Recommend additional tests to prescribe
 - **Back Navigation Enhancement**: Added comprehensive back button navigation to all workflow phases with smart routing between symptom assessment steps
+- **Clinical Assessment Tools**: Added popup modals for Pain Score Assessment (0-10 scale) and Procedures Done tracking in examination phase

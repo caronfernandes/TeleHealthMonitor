@@ -1312,8 +1312,9 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
             Available Tests to Recommend
           </h3>
 
+          {/* Primary 6 investigations */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-            {investigationOptions.map((test) => {
+            {investigationOptions.slice(0, 6).map((test) => {
               const isRecommended = investigationStatus[test.id] === "todo";
               return (
                 <button
@@ -1343,6 +1344,64 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
               );
             })}
           </div>
+
+          {/* Show More/Less Toggle */}
+          {investigationOptions.length > 6 && (
+            <div className="text-center">
+              {!showMoreInvestigations ? (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowMoreInvestigations(true)}
+                  className="text-purple-600 border-purple-300"
+                >
+                  <ChevronDown className="w-4 h-4 mr-2" />
+                  Show more tests ({investigationOptions.length - 6})
+                </Button>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                    {investigationOptions.slice(6).map((test) => {
+                      const isRecommended = investigationStatus[test.id] === "todo";
+                      return (
+                        <button
+                          key={test.id}
+                          onClick={() => 
+                            handleInvestigationStatusChange(
+                              test.id, 
+                              isRecommended ? "" : "todo"
+                            )
+                          }
+                          className={`p-3 text-left border rounded-lg transition-colors ${
+                            isRecommended
+                              ? "bg-orange-50 border-orange-300 text-orange-900"
+                              : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          <div className="font-medium">{test.name}</div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {test.normalRange}
+                          </div>
+                          {isRecommended && (
+                            <div className="text-xs text-orange-600 mt-1 font-medium">
+                              ✓ Will be prescribed
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowMoreInvestigations(false)}
+                    className="text-purple-600 border-purple-300"
+                  >
+                    <ChevronUp className="w-4 h-4 mr-2" />
+                    Show less
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Summary of recommended tests */}

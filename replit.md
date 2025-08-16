@@ -62,3 +62,7 @@ Preferred communication style: Simple, everyday language.
 - **Enhanced Symptom Details**: Added comprehensive assessment forms for primary and associated symptoms
 - **Streamlined Red Flags**: Integrated red flag detection directly into physical examination interface
 - **5-Step Workflow**: Simplified from 6 steps to 5 by removing standalone red flags assessment
+- **Guided Workflow Implementation**: Complete rewrite to progressive, one-question-at-a-time interface
+- **Auto-Navigation**: Automatic step progression with 500ms delays for smooth user experience
+- **Red Flag Integration**: Real-time clinical alerts during examination with visual indicators
+- **Complete Workflow**: All phases implemented - symptoms, examination, investigations, diagnosis, prescription

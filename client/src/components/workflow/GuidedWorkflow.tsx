@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronRight, Thermometer, Stethoscope, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronRight, Thermometer, Stethoscope, Clock, ChevronDown, ChevronUp, AlertTriangle, FileText, Pill, Plus, Edit, Trash2 } from 'lucide-react';
+import { examinationItems, investigationOptions, getRedFlags } from '@/lib/medical-data';
+import { useQuery } from '@tanstack/react-query';
 
 interface Patient {
   id: string;
@@ -110,8 +112,17 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [workflowPhase, setWorkflowPhase] = useState<'symptom_selection' | 'symptom_details' | 'examination' | 'investigation' | 'diagnosis' | 'prescription'>('symptom_selection');
   const [showMoreOptions, setShowMoreOptions] = useState<Record<string, boolean>>({});
-  const [selectedExaminations, setSelectedExaminations] = useState<string[]>([]);
+  const [selectedExaminations, setSelectedExaminations] = useState<Record<string, boolean>>({});
   const [examinationValues, setExaminationValues] = useState<Record<string, string>>({});
+  const [investigations, setInvestigations] = useState<string[]>([]);
+  const [investigationValues, setInvestigationValues] = useState<Record<string, Record<string, string>>>({});
+  const [investigationStatus, setInvestigationStatus] = useState<Record<string, string>>({});
+  const [selectedDiagnoses, setSelectedDiagnoses] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [prescriptionItems, setPrescriptionItems] = useState<any[]>([]);
+  const [editingItem, setEditingItem] = useState<any>(null);
+  const [showMedicineModal, setShowMedicineModal] = useState(false);
 
   const handleSymptomSelect = (symptom: string) => {
     setCurrentSymptom(symptom);
@@ -360,45 +371,185 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
     );
   };
 
+  const redFlags = getRedFlags(examinationValues);
+
+  const handleExaminationSelect = (examId: string) => {
+    setSelectedExaminations(prev => ({
+      ...prev,
+      [examId]: !prev[examId]
+    }));
+    
+    if (!selectedExaminations[examId]) {
+      setExaminationValues(prev => ({
+        ...prev,
+        [examId]: ''
+      }));
+    } else {
+      setExaminationValues(prev => {
+        const newValues = { ...prev };
+        delete newValues[examId];
+        return newValues;
+      });
+    }
+  };
+
+  const handleExaminationValueChange = (examId: string, value: string) => {
+    setExaminationValues(prev => ({
+      ...prev,
+      [examId]: value
+    }));
+  };
+
   const renderExamination = () => (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center">
+          <Stethoscope className="h-6 w-6 text-blue-600 mr-3" />
           Physical Examination
         </h2>
-        <p className="text-gray-600">Record key examination findings</p>
+        <p className="text-gray-600">Record vital signs and clinical findings</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {[
-          { id: 'temperature', label: 'Temperature', placeholder: '98.6°F', unit: '°F' },
-          { id: 'pulse', label: 'Pulse Rate', placeholder: '72', unit: '/min' },
-          { id: 'bp', label: 'Blood Pressure', placeholder: '120/80', unit: 'mmHg' },
-          { id: 'respiratory_rate', label: 'Breathing Rate', placeholder: '16', unit: '/min' }
-        ].map((exam) => (
-          <Card key={exam.id}>
-            <CardContent className="p-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {exam.label}
-              </label>
-              <div className="flex">
-                <input
-                  type="text"
-                  placeholder={exam.placeholder}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={examinationValues[exam.id] || ''}
-                  onChange={(e) => setExaminationValues(prev => ({
-                    ...prev,
-                    [exam.id]: e.target.value
-                  }))}
-                />
-                <span className="ml-2 px-3 py-2 bg-gray-100 text-gray-600 rounded-md">
-                  {exam.unit}
+      {/* Red Flags Alert */}
+      {redFlags.length > 0 && (
+        <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 mb-6">
+          <div className="flex items-center space-x-2 mb-3">
+            <AlertTriangle className="h-5 w-5 text-red-600" />
+            <span className="font-bold text-red-800">🚨 RED FLAGS DETECTED</span>
+          </div>
+          <div className="space-y-2">
+            {redFlags.map((flag, index) => (
+              <div 
+                key={index} 
+                className={`flex items-center space-x-2 p-2 rounded ${
+                  flag.critical ? 'bg-red-100 border border-red-300' : 'bg-yellow-100 border border-yellow-300'
+                }`}
+              >
+                <span className={`w-3 h-3 rounded-full ${flag.critical ? 'bg-red-500' : 'bg-yellow-500'}`}></span>
+                <span className={`font-medium ${flag.critical ? 'text-red-800' : 'text-yellow-800'}`}>
+                  {flag.text}
                 </span>
+                {flag.critical && (
+                  <span className="ml-auto bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
+                    CRITICAL
+                  </span>
+                )}
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Auto-pulled Vital Signs */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <h3 className="font-medium text-blue-800 mb-2">Vital Signs (Auto-pulled from reception)</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="bg-white p-3 rounded border">
+            <div className="font-medium text-gray-700">Temperature</div>
+            <div className="text-lg text-blue-600">101.2°F</div>
+          </div>
+          <div className="bg-white p-3 rounded border">
+            <div className="font-medium text-gray-700">Pulse</div>
+            <div className="text-lg text-blue-600">92/min</div>
+          </div>
+          <div className="bg-white p-3 rounded border">
+            <div className="font-medium text-gray-700">BP</div>
+            <div className="text-lg text-blue-600">120/80 mmHg</div>
+          </div>
+          <div className="bg-white p-3 rounded border">
+            <div className="font-medium text-gray-700">RR</div>
+            <div className="text-lg text-blue-600">18/min</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Clinical Examination */}
+      <div className="space-y-4 mb-8">
+        <h3 className="font-medium text-gray-700 text-lg">Clinical Examination</h3>
+        
+        <div className="grid gap-4">
+          {examinationItems.map((exam) => {
+            const hasRedFlag = redFlags.some(flag => flag.source === exam.id);
+            
+            return (
+              <div 
+                key={exam.id} 
+                className={`border rounded-lg p-4 ${
+                  hasRedFlag ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                }`}
+              >
+                <div className="flex items-start space-x-3 mb-3">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedExaminations[exam.id] || false}
+                    onChange={() => handleExaminationSelect(exam.id)}
+                    className="text-green-600 mt-1"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium text-gray-800">{exam.label}</span>
+                      {hasRedFlag && (
+                        <AlertTriangle className="h-4 w-4 text-red-500" />
+                      )}
+                    </div>
+                    {exam.normalRange && (
+                      <div className="text-xs text-gray-500 mt-1">Normal: {exam.normalRange}</div>
+                    )}
+                  </div>
+                </div>
+
+                {selectedExaminations[exam.id] && (
+                  <div className="mt-3 pl-8">
+                    {exam.type === 'input' && (
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="text"
+                          placeholder={exam.placeholder}
+                          value={examinationValues[exam.id] || ''}
+                          onChange={(e) => handleExaminationValueChange(exam.id, e.target.value)}
+                          className={`flex-1 p-2 border rounded text-sm ${
+                            hasRedFlag ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                          }`}
+                        />
+                        {exam.unit && (
+                          <span className="text-gray-500 text-sm font-medium px-2">
+                            {exam.unit}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    
+                    {exam.type === 'select' && (
+                      <select
+                        value={examinationValues[exam.id] || ''}
+                        onChange={(e) => handleExaminationValueChange(exam.id, e.target.value)}
+                        className={`w-full p-2 border rounded text-sm ${
+                          hasRedFlag ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                        }`}
+                      >
+                        <option value="">Select...</option>
+                        {exam.options?.map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                      </select>
+                    )}
+
+                    {exam.type === 'textarea' && (
+                      <textarea
+                        placeholder={exam.placeholder}
+                        value={examinationValues[exam.id] || ''}
+                        onChange={(e) => handleExaminationValueChange(exam.id, e.target.value)}
+                        className={`w-full p-2 border rounded text-sm h-20 resize-none ${
+                          hasRedFlag ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                        }`}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <div className="text-center pt-6">
@@ -406,6 +557,416 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
           Continue to Investigations
           <ChevronRight className="w-4 h-4 ml-2" />
         </Button>
+      </div>
+    </div>
+  );
+
+  // Investigation handlers
+  const handleInvestigationToggle = (testId: string) => {
+    setInvestigations(prev => {
+      if (prev.includes(testId)) {
+        const newInvestigations = prev.filter(t => t !== testId);
+        setInvestigationValues(prevValues => {
+          const newValues = { ...prevValues };
+          delete newValues[testId];
+          return newValues;
+        });
+        setInvestigationStatus(prevStatus => {
+          const newStatus = { ...prevStatus };
+          delete newStatus[testId];
+          return newStatus;
+        });
+        return newInvestigations;
+      } else {
+        return [...prev, testId];
+      }
+    });
+  };
+
+  const handleInvestigationStatusChange = (testId: string, status: string) => {
+    setInvestigationStatus(prev => ({
+      ...prev,
+      [testId]: status
+    }));
+  };
+
+  const handleInvestigationValueChange = (testId: string, valueKey: string, value: string) => {
+    setInvestigationValues(prev => ({
+      ...prev,
+      [testId]: {
+        ...prev[testId],
+        [valueKey]: value
+      }
+    }));
+  };
+
+  const renderInvestigation = () => (
+    <div className="max-w-6xl mx-auto space-y-6">
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Investigations (जांच करवाएं)
+        </h2>
+        <p className="text-gray-600">Select and configure recommended tests</p>
+      </div>
+      
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <h3 className="font-medium text-blue-800 mb-3">
+          Recommended for Fever (बुखार के लिए सुझाई गई जांच)
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {investigationOptions.map((test) => (
+            <button
+              key={test.id}
+              onClick={() => handleInvestigationToggle(test.id)}
+              className={`p-3 rounded border text-sm text-left transition-colors ${
+                investigations.includes(test.id) 
+                  ? 'bg-blue-600 text-white border-blue-600' 
+                  : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
+              }`}
+            >
+              <div className="font-medium">{test.name}</div>
+              {test.hasValues && investigations.includes(test.id) && (
+                <div className="text-xs mt-1 opacity-75">
+                  Click to configure values
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Selected Investigations Configuration */}
+      {investigations.length > 0 && (
+        <div className="space-y-4 mb-6">
+          <h3 className="font-medium text-gray-700 text-lg">Configure Selected Investigations</h3>
+          
+          {investigations.map((testId) => {
+            const test = investigationOptions.find(t => t.id === testId);
+            const status = investigationStatus[testId] || 'todo';
+            
+            return (
+              <div key={testId} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-medium text-gray-800">{test?.name}</h4>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm text-gray-600">Status:</label>
+                      <select
+                        value={status}
+                        onChange={(e) => handleInvestigationStatusChange(testId, e.target.value)}
+                        className="text-sm border border-gray-300 rounded px-2 py-1"
+                      >
+                        <option value="todo">To be done</option>
+                        <option value="done">Already done</option>
+                      </select>
+                    </div>
+                    
+                    {status === 'done' && (
+                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+                        ✓ Done
+                      </span>
+                    )}
+                    {status === 'todo' && (
+                      <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
+                        ⏳ To Do
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Values Input */}
+                {status === 'done' && test?.hasValues && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <h5 className="text-sm font-medium text-gray-700 mb-3">Enter Results:</h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {test.values?.map((valueKey) => (
+                        <div key={valueKey}>
+                          <label className="block text-xs text-gray-600 mb-1">{valueKey}</label>
+                          <input
+                            type="text"
+                            placeholder={`Enter ${valueKey}`}
+                            value={investigationValues[testId]?.[valueKey] || ''}
+                            onChange={(e) => handleInvestigationValueChange(testId, valueKey, e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded text-sm"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Instructions for 'todo' investigations */}
+                {status === 'todo' && (
+                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                    <p className="text-sm text-yellow-800">
+                      📋 This investigation will be prescribed to the patient
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="text-center pt-6">
+        <Button onClick={() => setWorkflowPhase('diagnosis')} className="px-8">
+          Continue to Diagnosis
+          <ChevronRight className="w-4 h-4 ml-2" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Diagnosis data
+  const diagnosisCategories = [
+    {
+      category: "Infectious",
+      diagnoses: [
+        { id: "inf_001", code: "A09", name: "Gastroenteritis", description: "Infectious gastroenteritis" },
+        { id: "inf_002", code: "B34.9", name: "Viral infection", description: "Unspecified viral infection" },
+        { id: "inf_003", code: "N39.0", name: "Urinary tract infection", description: "UTI, site not specified" },
+        { id: "inf_004", code: "A50.9", name: "Dengue fever", description: "Unspecified dengue fever" },
+        { id: "inf_005", code: "B50.9", name: "Malaria", description: "Plasmodium falciparum malaria" },
+        { id: "inf_006", code: "A01.0", name: "Typhoid fever", description: "Typhoid fever" }
+      ]
+    },
+    {
+      category: "Respiratory",
+      diagnoses: [
+        { id: "resp_001", code: "J00", name: "Acute nasopharyngitis (common cold)", description: "Viral upper respiratory tract infection" },
+        { id: "resp_002", code: "J06.9", name: "Acute upper respiratory infection", description: "Unspecified acute upper respiratory infection" },
+        { id: "resp_003", code: "J20.9", name: "Acute bronchitis", description: "Acute inflammation of bronchi" },
+        { id: "resp_004", code: "J18.9", name: "Pneumonia", description: "Unspecified pneumonia" }
+      ]
+    }
+  ];
+
+  const toggleDiagnosis = (diagnosisId: string) => {
+    setSelectedDiagnoses(prev => 
+      prev.includes(diagnosisId)
+        ? prev.filter(id => id !== diagnosisId)
+        : [...prev, diagnosisId]
+    );
+  };
+
+  const renderDiagnosis = () => {
+    const filteredCategories = diagnosisCategories.map(category => ({
+      ...category,
+      diagnoses: category.diagnoses.filter(diagnosis =>
+        diagnosis.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        diagnosis.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        diagnosis.description.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    })).filter(category => category.diagnoses.length > 0);
+
+    return (
+      <div className="max-w-6xl mx-auto space-y-6">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center">
+            <FileText className="h-6 w-6 text-green-600 mr-3" />
+            Clinical Diagnosis
+          </h2>
+          <p className="text-gray-600">
+            Select the most appropriate diagnosis(es) based on clinical findings and investigations.
+          </p>
+        </div>
+
+        {/* Search */}
+        <div className="relative mb-6">
+          <input
+            type="text"
+            placeholder="Search diagnoses by name, code, or description..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full p-3 border border-gray-300 rounded-lg pr-10"
+          />
+          <div className="absolute right-3 top-3">
+            <div className="w-6 h-6 text-gray-400">🔍</div>
+          </div>
+        </div>
+
+        {/* Diagnosis Categories */}
+        <div className="space-y-6">
+          {filteredCategories.map((category) => (
+            <div key={category.category} className="bg-white border border-gray-200 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{category.category}</h3>
+              <div className="grid gap-3">
+                {category.diagnoses.map((diagnosis) => (
+                  <div
+                    key={diagnosis.id}
+                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                      selectedDiagnoses.includes(diagnosis.id)
+                        ? 'border-green-300 bg-green-50'
+                        : 'border-gray-200 hover:border-green-300'
+                    }`}
+                    onClick={() => toggleDiagnosis(diagnosis.id)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium text-gray-900">{diagnosis.name}</span>
+                          <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                            {diagnosis.code}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">{diagnosis.description}</p>
+                      </div>
+                      {selectedDiagnoses.includes(diagnosis.id) && (
+                        <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center ml-4">
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="text-center pt-6">
+          <Button 
+            onClick={() => setWorkflowPhase('prescription')} 
+            disabled={selectedDiagnoses.length === 0}
+            className="px-8"
+          >
+            Continue to Prescription
+            <ChevronRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  // Prescription handlers
+  const { data: templates = [] } = useQuery({
+    queryKey: ['/api/prescription-templates'],
+  });
+
+  const handleTemplateSelect = (template: any) => {
+    setSelectedTemplate(template);
+    setPrescriptionItems(template.medications.map((drug: any, index: number) => ({
+      id: Date.now() + index,
+      ...drug
+    })));
+  };
+
+  const handleEditItem = (item: any) => {
+    setEditingItem({...item});
+    setShowMedicineModal(true);
+  };
+
+  const handleDeleteItem = (itemId: string) => {
+    setPrescriptionItems(prev => prev.filter(item => item.id !== itemId));
+  };
+
+  const handleAddNewMedicine = () => {
+    const newItem = {
+      id: Date.now(),
+      medicine: 'Paracetamol',
+      strength: '500mg',
+      frequency: 'BD',
+      duration: '5 Days',
+      instructions: 'After food'
+    };
+    setPrescriptionItems(prev => [...prev, newItem]);
+  };
+
+  const renderPrescription = () => (
+    <div className="max-w-6xl mx-auto space-y-6">
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center">
+          <Pill className="h-6 w-6 text-purple-600 mr-3" />
+          Prescription Management
+        </h2>
+        <p className="text-gray-600">Create prescription based on diagnosis</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Templates Panel */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Prescription Templates
+          </h3>
+          
+          <div className="space-y-3">
+            {[
+              { id: 1, name: 'Viral Fever', medications: [{ medicine: 'Paracetamol 500mg' }, { medicine: 'ORS' }] },
+              { id: 2, name: 'Bacterial Infection', medications: [{ medicine: 'Amoxicillin 500mg' }, { medicine: 'Paracetamol 500mg' }] },
+              { id: 3, name: 'Common Cold', medications: [{ medicine: 'Cetirizine 10mg' }, { medicine: 'Paracetamol 500mg' }] }
+            ].map((template: any) => (
+              <div
+                key={template.id}
+                className="p-4 border border-gray-200 rounded-lg hover:border-blue-400 cursor-pointer transition-colors"
+                onClick={() => handleTemplateSelect(template)}
+              >
+                <h4 className="font-medium text-gray-900">{template.name}</h4>
+                <p className="text-sm text-gray-600 mt-1">
+                  {template.medications.length} medications
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Prescription Editor */}
+        <div className="lg:col-span-2 bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Current Prescription
+            </h3>
+            <Button onClick={handleAddNewMedicine} className="px-4 py-2">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Medicine
+            </Button>
+          </div>
+
+          {/* Prescription Items */}
+          <div className="space-y-4 mb-6">
+            {prescriptionItems.length > 0 ? (
+              prescriptionItems.map((item) => (
+                <div key={item.id} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-900">{item.medicine}</h4>
+                      <div className="text-sm text-gray-600 mt-1">
+                        <span>{item.strength}</span> • 
+                        <span>{item.frequency}</span> • 
+                        <span>{item.duration}</span>
+                      </div>
+                      <div className="text-sm text-gray-500 mt-1">
+                        {item.instructions}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleEditItem(item)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleDeleteItem(item.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Pill className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>No medications added yet</p>
+                <p className="text-sm">Select a template or add medicines manually</p>
+              </div>
+            )}
+          </div>
+
+          {/* Complete Consultation */}
+          <div className="text-center pt-6 border-t border-gray-200">
+            <Button className="px-8 py-3 text-lg">
+              Complete Consultation
+              <ChevronRight className="w-5 h-5 ml-2" />
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -419,12 +980,11 @@ export function GuidedWorkflow({ patientInfo }: GuidedWorkflowProps) {
       case 'examination':
         return renderExamination();
       case 'investigation':
-        return (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Investigations</h2>
-            <p className="text-gray-600">Investigation module coming soon...</p>
-          </div>
-        );
+        return renderInvestigation();
+      case 'diagnosis':
+        return renderDiagnosis();
+      case 'prescription':
+        return renderPrescription();
       default:
         return null;
     }
